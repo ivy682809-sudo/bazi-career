@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>行业五行志 · 日主五行查询</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#faf9f6;color:#1a1a1a;min-height:100vh}
+header{position:sticky;top:0;z-index:50;background:rgba(250,249,246,.9);backdrop-filter:blur(8px);border-bottom:1px solid #e7e5e4;padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between}
+header a{font-size:18px;font-weight:600;color:#1c1917;text-decoration:none}
+main{max-width:640px;margin:0 auto;padding:32px 16px}
+h1{font-size:24px;font-weight:700;text-align:center;color:#1c1917;margin-bottom:8px}
+.sub{text-align:center;color:#78716c;margin-bottom:32px;line-height:1.6;max-width:400px;margin-left:auto;margin-right:auto}
+.card{border-radius:12px;border:1px solid #e7e5e4;background:#fff;padding:24px}
+label.block{display:block;font-size:14px;color:#78716c;margin-bottom:4px}
+input[type=number]{width:100%;border-radius:8px;border:1px solid #e7e5e4;background:#fff;padding:10px;text-align:center;font-size:18px;font-weight:500;color:#1c1917;outline:none}
+input[type=number]:focus{border-color:#a8a29e;box-shadow:0 0 0 3px rgba(168,162,158,.2)}
+.input-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px}
+.time-toggle{display:flex;align-items:center;gap:8px;margin-bottom:20px}
+.time-toggle input[type=checkbox]{accent-color:#1c1917;width:16px;height:16px}
+.time-toggle span{font-size:14px;color:#78716c}
+.btn{width:100%;border-radius:8px;background:#1c1917;color:#fff;padding:12px;font-size:17px;font-weight:500;border:none;cursor:pointer;transition:background .2s}
+.btn:hover{background:#292524}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.dim{font-size:12px;color:#a8a29e;text-align:center;margin-top:12px}
+.result{margin-top:24px;animation:fadeIn .5s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.result-card{border-radius:12px;border:1px solid #e7e5e4;background:#fff;padding:24px;text-align:center;margin-bottom:16px}
+.badge{display:inline-block;padding:4px 16px;border-radius:20px;font-size:14px;font-weight:600;margin-bottom:12px}
+.badge-gold{background:#fef3c7;color:#92400e}
+.badge-green{background:#d1fae5;color:#065f46}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-amber{background:#fef3c7;color:#92400e}
+.master{font-size:40px;font-weight:700;color:#1c1917;margin:8px 0}
+.desc{color:#78716c;font-size:15px;line-height:1.6;margin-bottom:16px}
+.traits{display:flex;flex-wrap:wrap;gap:8px;justify-content:center}
+.trait{background:#f5f5f4;color:#57534e;padding:4px 12px;border-radius:20px;font-size:13px}
+.table-wrap{border-radius:12px;border:1px solid #e7e5e4;background:#fff;padding:16px;margin-bottom:16px}
+.table-wrap h3{font-size:14px;color:#78716c;margin-bottom:12px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px 12px;text-align:center;border-bottom:1px solid #f5f5f4;font-size:14px}
+th{color:#78716c;font-weight:500}
+td{font-weight:600;color:#1c1917}
+.paywall{border-radius:12px;border:1px solid #e7e5e4;background:#fff;padding:24px;text-align:center}
+.paywall p{color:#57534e;margin-bottom:16px;line-height:1.6}
+.paywall .btn{background:#1c1917;margin-bottom:8px}
+.paywall .dim2{font-size:12px;color:#a8a29e}
+footer{border-top:1px solid #e7e5e4;padding:32px 0;margin-top:64px;text-align:center;font-size:14px;color:#a8a29e}
+footer p{margin-top:4px}
+footer a{color:#a8a29e;text-decoration:none}
+footer a:hover{color:#78716c}
+/* Report page */
+.section{margin-bottom:32px}
+.section h2{font-size:20px;font-weight:700;margin-bottom:16px;color:#1c1917}
+.match-grid{display:grid;gap:12px}
+.match-card{border-radius:10px;border:1px solid #e7e5e4;background:#fff;padding:16px}
+.match-card .industry{font-size:16px;font-weight:600;color:#1c1917;margin-bottom:4px}
+.match-card .reason{font-size:14px;color:#57534e;line-height:1.5}
+.match-card .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.match-card .tag{font-size:11px;padding:2px 8px;border-radius:10px;background:#f5f5f4;color:#78716c}
+.bar-wrap{height:6px;background:#f5f5f4;border-radius:3px;margin-bottom:8px}
+.bar-fill{height:6px;border-radius:3px}
+.bar-best{background:#10b981}.bar-good{background:#6366f1}.bar-neutral{background:#a8a29e}.bar-challenging{background:#ef4444}
+.level-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-bottom:8px}
+.level-best{color:#059669}.level-good{color:#4f46e5}.level-neutral{color:#78716c}.level-challenging{color:#dc2626}
+.about-page{max-width:640px;margin:0 auto;padding:32px 16px}
+.about-page h2{font-size:22px;font-weight:700;margin:24px 0 12px;color:#1c1917}
+.about-page p,.about-page li{color:#57534e;line-height:1.7;margin-bottom:8px}
+.about-page ul{padding-left:20px;margin-bottom:16px}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="#" onclick="showPage('home');return false">行业五行志</a>
+  <nav style="display:flex;gap:16px;font-size:14px">
+    <a href="#" onclick="showPage('home');return false" id="nav-home">排盘</a>
+    <a href="#" onclick="showPage('about');return false" id="nav-about" style="color:#78716c">关于</a>
+  </nav>
+</header>
+
+<!-- HOME PAGE -->
+<main id="page-home">
+  <h1>三分钟查出你的日主五行</h1>
+  <p class="sub">MBTI 测的是你想成为谁，日主看的是你本来就是什么。前者填问卷，后者只查出生日。</p>
+
+  <div class="card">
+    <form id="bazi-form" onsubmit="handleSubmit(event)">
+      <div class="input-grid">
+        <div><label class="block">年</label><input type="number" id="in-year" min="1900" max="2100" value="2000" required></div>
+        <div><label class="block">月</label><input type="number" id="in-month" min="1" max="12" value="6" required></div>
+        <div><label class="block">日</label><input type="number" id="in-day" min="1" max="31" value="15" required></div>
+      </div>
+      <div class="time-toggle">
+        <input type="checkbox" id="unknown-time" checked onchange="toggleTimeFields()">
+        <span>未知出生时间（默认午时）</span>
+      </div>
+      <div id="time-fields" style="display:none">
+        <div class="input-grid">
+          <div><label class="block">时 (0-23)</label><input type="number" id="in-hour" min="0" max="23" value="12"></div>
+          <div><label class="block">分</label><input type="number" id="in-minute" min="0" max="59" value="0"></div>
+        </div>
+      </div>
+      <button type="submit" class="btn" id="submit-btn">查看我的日主五行</button>
+      <p class="dim">所有计算在浏览器本地完成，不上传任何个人信息</p>
+    </form>
+  </div>
+
+  <div id="result-area" style="display:none"></div>
+  <div id="empty-hint" style="text-align:center;margin-top:24px">
+    <p class="dim">输入公历出生日期，即刻出结果。</p>
+    <p class="dim">不知道出生时间？勾选「未知出生时间」，默认午时计算。</p>
+  </div>
+</main>
+
+<!-- REPORT PAGE -->
+<main id="page-report" style="display:none">
+  <div id="report-content"></div>
+</main>
+
+<!-- ABOUT PAGE -->
+<main id="page-about" style="display:none">
+  <div class="about-page">
+    <h2>什么是日主五行？</h2>
+    <p>日主是你出生那天的天干。八字四柱（年、月、日、时）中，日柱天干代表你自己——它是你的「本命元神」。日主五行（金木水火土）就是你与生俱来的能量底色。</p>
+
+    <h2>怎么看行业匹配？</h2>
+    <p>每个行业有自己的五行属性。互联网前端属火、后端属金、中台属土……你的日主五行与所在行业的五行相生则顺遂，相克则消耗。</p>
+    <p>这不是宿命论。是五行在那个工位底下运行——知道了，你可以选择。</p>
+
+    <h2>常见问题</h2>
+    <ul>
+      <li><strong>需要精确出生时间吗？</strong>日柱只需要年月日，时柱影响较小。不知道时间勾选「未知出生时间」即可。</li>
+      <li><strong>公历还是农历？</strong>公历（阳历）。输入你身份证上的生日即可。</li>
+      <li><strong>数据安全吗？</strong>所有计算在你浏览器本地执行，不上传任何数据到服务器。</li>
+      <li><strong>如何解锁完整报告？</strong>点击「解锁完整报告」跳转面包多支付，支付完成后自动解锁。</li>
+    </ul>
+
+    <h2>免责声明</h2>
+    <p>本工具提供的信息仅供娱乐和文化参考，不构成任何职业建议、心理诊断或人生决策依据。五行分析基于中国传统文化理论框架，不代表科学验证的结论。</p>
+  </div>
+</main>
+
+<footer>
+  <p>所有计算在浏览器本地执行，不上传任何数据。</p>
+  <p><a href="#" onclick="showPage('about');return false">关于 · 隐私政策</a></p>
+</footer>
+
+<script>
+// ============================================================
+// 八字计算核心引擎 (纯 JS，零依赖)
+// ============================================================
+
+const STEMS = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const BRANCHES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+
+const STEM_ELEMENT = {
+  '甲':'木','乙':'木','丙':'火','丁':'火','戊':'土',
+  '己':'土','庚':'金','辛':'金','壬':'水','癸':'水'
+};
+
+// 基准日 1900-01-01 = 甲戌日（天干索引0，地支索引10）
+const REF_YEAR = 1900, REF_MONTH = 1, REF_DAY = 1;
+const REF_STEM = 0, REF_BRANCH = 10;
+
+function daysBetween(y1,m1,d1,y2,m2,d2) {
+  const utc1 = Date.UTC(y1,m1-1,d1);
+  const utc2 = Date.UTC(y2,m2-1,d2);
+  return Math.floor((utc2 - utc1) / 86400000);
+}
+
+// 节气近似值
+const SOLAR_TERMS = {
+  2:[4,4,4,5], 3:[6,5,5,6], 4:[5,4,4,5], 5:[6,5,5,6],
+  6:[6,5,5,6], 7:[7,7,7,8], 8:[8,7,7,8], 9:[8,7,7,8],
+  10:[8,8,8,9], 11:[7,7,8,8], 12:[7,7,7,8], 1:[6,5,5,6]
+};
+
+function getTermDay(year, month) {
+  const arr = SOLAR_TERMS[month];
+  if (!arr) return 6;
+  return arr[year % 4] || arr[0];
+}
+
+// 五虎遁
+const YEAR_STEM_MONTH = {0:2,5:2, 1:4,6:4, 2:6,7:6, 3:8,8:8, 4:0,9:0};
+
+// 五鼠遁
+const DAY_STEM_HOUR = {0:0,5:0, 1:2,6:2, 2:4,7:4, 3:6,8:6, 4:8,9:8};
+
+function calculateBazi(year, month, day, hour) {
+  // 日柱
+  const dayDiff = daysBetween(REF_YEAR, REF_MONTH, REF_DAY, year, month, day);
+  const dsi = ((REF_STEM + dayDiff) % 10 + 10) % 10;
+  const dbi = ((REF_BRANCH + dayDiff) % 12 + 12) % 12;
+
+  // 年柱（立春分界）
+  const lichun = getTermDay(year, 2);
+  const isBeforeLichun = month < 2 || (month === 2 && day < lichun);
+  const effYear = isBeforeLichun ? year - 1 : year;
+  const ysi = (effYear - 4) % 10;
+  const ybi = (effYear - 4) % 12;
+
+  // 月柱
+  let mbi = (month + 1) % 12;
+  const termDay = getTermDay(year, month);
+  if (day < termDay) mbi = (mbi + 11) % 12;
+  const firstStem = YEAR_STEM_MONTH[ysi];
+  const msi = (firstStem + (mbi - 2 + 12) % 12) % 10;
+
+  // 时柱
+  const hbi = Math.floor((hour + 1) / 2) % 12;
+  const hsi = (DAY_STEM_HOUR[dsi] + hbi) % 10;
+
+  return {
+    yearPillar: STEMS[ysi] + BRANCHES[ybi],
+    monthPillar: STEMS[msi] + BRANCHES[mbi],
+    dayPillar: STEMS[dsi] + BRANCHES[dbi],
+    hourPillar: STEMS[hsi] + BRANCHES[hbi],
+    dayMaster: STEMS[dsi],
+    dayElement: STEM_ELEMENT[STEMS[dsi]]
+  };
+}
+
+// ============================================================
+// 日主特征描述
+// ============================================================
+
+const DAY_MASTER_INFO = {
+  '金': { element:'金', badge:'badge-gold', title:'金', desc:'框架感先于感受。精密、秩序、不可见但不可或缺。', traits:['逻辑是本能不是技能','精密与秩序天然在线','适合需要不可见深度的角色'] },
+  '木': { element:'木', badge:'badge-green', title:'木', desc:'生长欲先于规则。发散、创意，天生知道什么东西可以长。', traits:['直觉判断天生准确','创意有根、有枝、有燃烧的理由','适合需要生长感而非完成感的角色'] },
+  '水': { element:'水', badge:'badge-blue', title:'水', desc:'流动感先于一切。不喜被固定在一个位置、一个节奏、一套标签里。', traits:['流动即深度，每个项目是一条新河道','信息即水，渠道即直觉','适合需要多变的深度而非固定角色的位置'] },
+  '火': { element:'火', badge:'badge-red', title:'火', desc:'表达欲先于逻辑。燃烧、外放、需要被看见。', traits:['表达不是技能是燃料补给','即时应激天然在线','适合需要被看见、需要即时反馈的角色'] },
+  '土': { element:'土', badge:'badge-amber', title:'土', desc:'秩序感先于自由。承载、协调、把多方捏合为整体。', traits:['多方拉扯是日常节奏不是消耗','制度是你的骨骼不是牢笼','适合需要统筹、承载、捏合多方力量的角色'] }
+};
+
+// ============================================================
+// 行业匹配数据
+// ============================================================
+
+const RECOMMENDATIONS = {
+  '金': {
+    best: [
+      {industry:'后端开发',score:95,reason:'金得金扶。逻辑与系统天然同频，架构感在线。',tags:['技术','深度']},
+      {industry:'投行建模',score:92,reason:'金水相生。模型即本能，交易结构如刀入鞘。',tags:['金融','精密']},
+      {industry:'风控/合规',score:90,reason:'金主收敛。逐条对照、标点符号都不能错——这正是你的节奏。',tags:['金融','制度']}
+    ],
+    avoid: [
+      {industry:'前端开发',score:25,reason:'金主精密，与外放反向。字距调到像素级，调完说不出为什么。',tags:['创意','表达']},
+      {industry:'销售/BD',score:20,reason:'火克金。高频社交燃烧你的燃料，每一次 pitch 都在消耗。',tags:['外向','高频']}
+    ]
+  },
+  '木': {
+    best: [
+      {industry:'VC/PE',score:93,reason:'木主生发。翻BP翻到第三页不再往下翻——直觉已经告诉你这个东西能不能长。',tags:['投资','判断']},
+      {industry:'品牌/内容',score:90,reason:'木火通明。创意有根、有枝、有燃烧的理由。',tags:['创意','传播']},
+      {industry:'教育/培训',score:88,reason:'木主生发。陪一个人从零到一，是你的本能不是工作。',tags:['成长','输出']}
+    ],
+    avoid: [
+      {industry:'银行/体制',score:22,reason:'金克木。制度三圈流转，一个创新想法磨三轮回到原点。',tags:['制度','流程']},
+      {industry:'合规/审计',score:18,reason:'木主发散被金之收敛反复修剪。每日如被削平。',tags:['精确','重复']}
+    ]
+  },
+  '水': {
+    best: [
+      {industry:'咨询/研究',score:94,reason:'水主深度。一个领域沉十年，专业是你唯一不需要汇报的东西。',tags:['深度','专业']},
+      {industry:'学术/科研',score:92,reason:'水主持续。三十五岁的图纸五十五岁还在用——这是水的时间尺度。',tags:['学术','长周期']},
+      {industry:'媒体/编辑',score:87,reason:'信息即水，渠道即直觉。流动性是你的天赋不是缺陷。',tags:['表达','信息']}
+    ],
+    avoid: [
+      {industry:'产品/运营',score:28,reason:'土克水。每日站会、每周OKR——水的天然节律被数据压至水汽全无。',tags:['节奏','调度']},
+      {industry:'销售管理',score:22,reason:'水需深流，销售管理要燃要催——水火不相射。',tags:['管理','激励']}
+    ]
+  },
+  '火': {
+    best: [
+      {industry:'前端/设计',score:93,reason:'火得火助。像素级打磨、AB测转化——燃烧就是你最好的工作状态。',tags:['视觉','表达']},
+      {industry:'销售/市场',score:91,reason:'火主外放。即时应激天然在线，每一次 pitch 都是燃料补给。',tags:['外向','沟通']},
+      {industry:'内容/自媒体',score:89,reason:'表达不是技能是燃料。你不需要被激励——你本身就燃。',tags:['创作','传播']}
+    ],
+    avoid: [
+      {industry:'后端/数据',score:20,reason:'水克火。优化上线三月方见效，三周已烧干。',tags:['深度','孤寂']},
+      {industry:'风控/审计',score:15,reason:'火需反馈，风控不给——一份报告写两周，中间不聊天。',tags:['精确','检查']}
+    ]
+  },
+  '土': {
+    best: [
+      {industry:'产品经理',score:94,reason:'土主承载。左火右金，顶上是OKR倒计时——多方拉扯是你的日常节奏不是消耗。',tags:['协调','统筹']},
+      {industry:'运营/管理',score:91,reason:'火土相成。把火的外放落地成执行，把金的逻辑翻译成人话。',tags:['执行','协调']},
+      {industry:'行政/体制',score:88,reason:'土主年限与秩序。制度是你的骨骼不是牢笼，越稳越上。',tags:['制度','稳定']}
+    ],
+    avoid: [
+      {industry:'初创/自由职业',score:25,reason:'木克土。自由职业是木之生发——土日主在不确定中每日被消耗。',tags:['自由','冒险']},
+      {industry:'创意/广告',score:22,reason:'木克土。每日要求推翻昨日的规则——而规则是土的天性。',tags:['创新','颠覆']}
+    ]
+  }
+};
+
+// ============================================================
+// 页面逻辑
+// ============================================================
+
+let currentBazi = null;
+
+function toggleTimeFields() {
+  const unknown = document.getElementById('unknown-time').checked;
+  document.getElementById('time-fields').style.display = unknown ? 'none' : 'block';
+}
+
+function handleSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  btn.textContent = '计算中...';
+  btn.disabled = true;
+
+  const year = parseInt(document.getElementById('in-year').value);
+  const month = parseInt(document.getElementById('in-month').value);
+  const day = parseInt(document.getElementById('in-day').value);
+  const unknownTime = document.getElementById('unknown-time').checked;
+  const hour = unknownTime ? 12 : parseInt(document.getElementById('in-hour').value || 12);
+
+  try {
+    const result = calculateBazi(year, month, day, hour);
+    currentBazi = result;
+    showResult(result);
+    document.getElementById('empty-hint').style.display = 'none';
+  } catch(err) {
+    alert('计算失败，请检查输入的日期是否正确。');
+  } finally {
+    btn.textContent = '查看我的日主五行';
+    btn.disabled = false;
+  }
+}
+
+function showResult(result) {
+  const info = DAY_MASTER_INFO[result.dayElement];
+  const area = document.getElementById('result-area');
+
+  area.style.display = 'block';
+  area.innerHTML = `
+    <div class="result">
+      <div class="result-card">
+        <span class="badge ${info.badge}">日主五行</span>
+        <div class="master">${result.dayMaster} · ${info.element}</div>
+        <p class="desc">${info.desc}</p>
+        <div class="traits">
+          ${info.traits.map(t => '<span class="trait">'+t+'</span>').join('')}
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <h3>八字四柱</h3>
+        <table>
+          <tr><th>年柱</th><th>月柱</th><th>日柱</th><th>时柱</th></tr>
+          <tr><td>${result.yearPillar}</td><td>${result.monthPillar}</td><td>${result.dayPillar}</td><td>${result.hourPillar}</td></tr>
+        </table>
+      </div>
+
+      <div class="paywall">
+        <p>知道日主只是第一步。<br>你的日主五行对照九大行业——<br>哪些生你、哪些克你、哪些正与你互咬。</p>
+        <button class="btn" onclick="showReport()">查看完整行业匹配报告 <span style="color:#a8a29e;font-size:14px;font-weight:400">￥9.9</span></button>
+        <p class="dim2">一次付费，永久可查。所有数据在浏览器本地处理。</p>
+      </div>
+    </div>
+  `;
+}
+
+function showReport() {
+  if (!currentBazi) return;
+  const el = currentBazi.dayElement;
+  const rec = RECOMMENDATIONS[el];
+  if (!rec) return;
+
+  document.getElementById('page-home').style.display = 'none';
+  document.getElementById('page-about').style.display = 'none';
+  document.getElementById('page-report').style.display = 'block';
+  document.getElementById('nav-home').style.color = '#78716c';
+  document.getElementById('nav-about').style.color = '#78716c';
+
+  const genMatchHTML = (items, level, label, cls) => items.map(m => `
+    <div class="match-card">
+      <div class="bar-wrap"><div class="bar-fill bar-${cls}" style="width:${m.score}%"></div></div>
+      <div class="industry">${m.industry} <span style="font-size:12px;color:#a8a29e">${m.score}分</span></div>
+      <div class="reason">${m.reason}</div>
+      <div class="tags">${m.tags.map(t=>'<span class="tag">'+t+'</span>').join('')}</div>
+    </div>
+  `).join('');
+
+  const info = DAY_MASTER_INFO[el];
+  document.getElementById('report-content').innerHTML = `
+    <div style="text-align:center;margin-bottom:32px">
+      <span class="badge ${info.badge}">${info.element}日主</span>
+      <h1 style="font-size:28px;margin:8px 0">行业五行匹配报告</h1>
+      <p class="sub">基于日主五行 {el} 的行业适配分析</p>
+    </div>
+
+    <div class="section">
+      <p class="level-label level-best" style="font-size:13px">✦ 最佳匹配</p>
+      <div class="match-grid">${genMatchHTML(rec.best,'best','最佳匹配','best')}</div>
+    </div>
+
+    <div class="section">
+      <p class="level-label level-challenging" style="font-size:13px">⚠ 慎入行业</p>
+      <div class="match-grid">${genMatchHTML(rec.avoid,'challenging','慎入','challenging')}</div>
+    </div>
+
+    <div style="text-align:center;padding:24px;color:#78716c;font-size:14px;line-height:1.8">
+      行业有五行。日主有五行。<br>
+      相生则顺遂，相克则消耗。<br>
+      五行不是判决书——是让你看清脚下的砖。<br>
+      知道之后，怎么走，是你的选择。
+    </div>
+
+    <div style="text-align:center;margin-top:24px">
+      <button class="btn" onclick="showPage('home')" style="max-width:200px">← 返回查询</button>
+    </div>
+  `;
+}
+
+function showPage(page) {
+  document.getElementById('page-home').style.display = page === 'home' ? 'block' : 'none';
+  document.getElementById('page-report').style.display = 'none';
+  document.getElementById('page-about').style.display = page === 'about' ? 'block' : 'none';
+  document.getElementById('nav-home').style.color = page === 'home' ? '#1c1917' : '#78716c';
+  document.getElementById('nav-about').style.color = page === 'about' ? '#1c1917' : '#78716c';
+  document.getElementById('nav-home').style.fontWeight = page === 'home' ? '600' : '400';
+  document.getElementById('nav-about').style.fontWeight = page === 'about' ? '600' : '400';
+  if (page === 'home' && currentBazi) {
+    document.getElementById('empty-hint').style.display = 'none';
+  } else if (page === 'home' && !currentBazi) {
+    document.getElementById('empty-hint').style.display = 'block';
+    document.getElementById('result-area').style.display = 'none';
+  }
+}
+</script>
+</body>
+</html>
