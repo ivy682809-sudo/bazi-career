@@ -69,6 +69,30 @@ footer a:hover{color:#78716c}
 .about-page h2{font-size:22px;font-weight:700;margin:24px 0 12px;color:#1c1917}
 .about-page p,.about-page li{color:#57534e;line-height:1.7;margin-bottom:8px}
 .about-page ul{padding-left:20px;margin-bottom:16px}
+/* Report enriched */
+.bar-good{background:#6366f1}
+.level-good{color:#4f46e5}
+.deep-card{border-radius:10px;border:1px solid #e7e5e4;background:#fafaf9;padding:20px;margin-bottom:12px}
+.deep-card h3{font-size:14px;font-weight:600;color:#1c1917;margin-bottom:8px}
+.deep-card p{font-size:13px;color:#57534e;line-height:1.7;margin-bottom:6px}
+.essence-box{border-left:3px solid #1c1917;padding-left:16px;margin:16px 0}
+.essence-box p{font-size:14px;color:#44403c;line-height:1.8;font-style:italic}
+.energy-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.energy-item{background:#fff;border-radius:8px;padding:12px;border:1px solid #e7e5e4}
+.energy-item .label{font-size:11px;color:#a8a29e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.energy-item .value{font-size:13px;color:#44403c;line-height:1.6}
+.rhythm-box{background:#fff;border-radius:8px;padding:16px;border:1px solid #e7e5e4;margin:12px 0}
+.rhythm-box .vs{color:#a8a29e;font-size:12px;margin:4px 0;text-align:center}
+.rhythm-box .a{color:#059669;font-weight:600;font-size:14px}
+.rhythm-box .b{color:#dc2626;font-size:14px}
+.warning-box{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;margin:12px 0}
+.warning-box p{color:#991b1b;font-size:13px;line-height:1.7}
+.harmonize-card{border-radius:10px;border:1px solid #e7e5e4;background:#fff;padding:20px;margin-bottom:12px}
+.harmonize-card h3{font-size:14px;font-weight:600;color:#1c1917;margin-bottom:12px}
+.harmonize-card .tip-row{margin-bottom:10px}
+.harmonize-card .tip-label{font-size:11px;color:#a8a29e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.harmonize-card .tip-text{font-size:13px;color:#44403c;line-height:1.7}
+.sep{text-align:center;color:#d6d3d1;margin:24px 0;font-size:20px;letter-spacing:8px}
 </style>
 </head>
 <body>
@@ -243,58 +267,182 @@ const DAY_MASTER_INFO = {
 const RECOMMENDATIONS = {
   '金': {
     best: [
-      {industry:'后端开发',score:95,reason:'金得金扶。逻辑与系统天然同频，架构感在线。',tags:['技术','深度']},
-      {industry:'投行建模',score:92,reason:'金水相生。模型即本能，交易结构如刀入鞘。',tags:['金融','精密']},
-      {industry:'风控/合规',score:90,reason:'金主收敛。逐条对照、标点符号都不能错——这正是你的节奏。',tags:['金融','制度']}
+      {industry:'后端开发',score:95,reason:'金得金扶——逻辑与系统天然同频，架构感不是学的，是本能',tags:['技术','深度']},
+      {industry:'投行建模',score:92,reason:'金主定价逻辑——不是在计算，是在打磨一件金器',tags:['金融','精密']},
+      {industry:'风控/合规',score:90,reason:'金主收敛——逐条对照、标点符号都不能错，这正是你的节奏',tags:['金融','制度']},
+      {industry:'法律',score:88,reason:'金主条文与对抗——对逻辑的信仰天然在线，漏洞在你看不见的地方也跑不掉',tags:['法律','专业']},
+      {industry:'数据分析',score:85,reason:'金主不可见的秩序——数据里藏着你要的结构，别人看噪声，你看信号',tags:['互联网','数据']}
+    ],
+    good: [
+      {industry:'产品经理',score:72,reason:'土生金——你的框架感让需求文档滴水不漏。注意别过度设计——给火留点空间',tags:['协调','产品']},
+      {industry:'咨询',score:70,reason:'金水相生——问题拆解能力天然在线。但咨询的频繁换项目可能让你觉得深度不够',tags:['分析','专业']},
+      {industry:'审计',score:68,reason:'金得金助——精确是你的舒适区。但审计节奏的季节性爆发可能打乱你的节奏感',tags:['财务','检查']}
     ],
     avoid: [
-      {industry:'前端开发',score:25,reason:'金主精密，与外放反向。字距调到像素级，调完说不出为什么。',tags:['创意','表达']},
-      {industry:'销售/BD',score:20,reason:'火克金。高频社交燃烧你的燃料，每一次 pitch 都在消耗。',tags:['外向','高频']}
+      {industry:'前端开发',score:25,reason:'火克金——字距调到像素级，调完说不出为什么。你的精密在那里不被看见',tags:['创意','表达']},
+      {industry:'销售/BD',score:20,reason:'火克金——高频社交燃烧你的燃料，每一次pitch都在消耗而非补给',tags:['外向','高频']},
+      {industry:'创意设计',score:18,reason:'火克金——金主收敛，创意主发散，每日推翻昨日的秩序是对你的慢性消耗',tags:['发散','推翻']}
     ]
   },
   '木': {
     best: [
-      {industry:'VC/PE',score:93,reason:'木主生发。翻BP翻到第三页不再往下翻——直觉已经告诉你这个东西能不能长。',tags:['投资','判断']},
-      {industry:'品牌/内容',score:90,reason:'木火通明。创意有根、有枝、有燃烧的理由。',tags:['创意','传播']},
-      {industry:'教育/培训',score:88,reason:'木主生发。陪一个人从零到一，是你的本能不是工作。',tags:['成长','输出']}
+      {industry:'VC/PE',score:93,reason:'木主生发——翻BP到第三页不再往下翻，直觉告诉你这个人能不能长',tags:['投资','判断']},
+      {industry:'品牌/内容',score:90,reason:'木火通明——品牌是种出来的不是造出来的，你有这个耐心也有这个审美',tags:['创意','传播']},
+      {industry:'教育/培训',score:88,reason:'木主生发——教书就是给种子浇水，陪一个人从零到一是你的本能不是工作',tags:['成长','输出']},
+      {industry:'设计/创意',score:86,reason:'木得水生——创意有根有枝有燃烧的理由，不是天马行空是有方向的生长',tags:['设计','创新']},
+      {industry:'自媒体/内容创业',score:84,reason:'木主发散生长——你不缺选题，你天生知道什么东西可以长成一片',tags:['创作','独立']}
+    ],
+    good: [
+      {industry:'产品管理',score:73,reason:'木克土但可控——你的发散思维可以帮团队找到新方向。注意给土日主同事留够框架感',tags:['产品','创新']},
+      {industry:'市场/营销',score:70,reason:'木生火——你的创意落地成campaign那天很燃。但持续优化ROI会让你觉得在修剪不该剪的枝',tags:['营销','增长']},
+      {industry:'HR/组织发展',score:68,reason:'木主生发——看人成长是你的成就感来源。但制度性事务（考勤、合规）不是在种树是在修篱笆',tags:['人才','成长']}
     ],
     avoid: [
-      {industry:'银行/体制',score:22,reason:'金克木。制度三圈流转，一个创新想法磨三轮回到原点。',tags:['制度','流程']},
-      {industry:'合规/审计',score:18,reason:'木主发散被金之收敛反复修剪。每日如被削平。',tags:['精确','重复']}
+      {industry:'银行/体制',score:22,reason:'金克木——制度三圈流转，一个创新想法磨三轮回到原点。流程即剪刀',tags:['制度','流程']},
+      {industry:'合规/审计',score:18,reason:'金克木——木主发散被金之收敛反复修剪。每天对标条文，不是在生长是在被削平',tags:['精确','重复']},
+      {industry:'投行',score:20,reason:'金克木——每一笔交易都在修剪不该剪的枝杈。财务模型不关心什么东西可以长',tags:['财务','高压']}
     ]
   },
   '水': {
     best: [
-      {industry:'咨询/研究',score:94,reason:'水主深度。一个领域沉十年，专业是你唯一不需要汇报的东西。',tags:['深度','专业']},
-      {industry:'学术/科研',score:92,reason:'水主持续。三十五岁的图纸五十五岁还在用——这是水的时间尺度。',tags:['学术','长周期']},
-      {industry:'媒体/编辑',score:87,reason:'信息即水，渠道即直觉。流动性是你的天赋不是缺陷。',tags:['表达','信息']}
+      {industry:'咨询/研究',score:94,reason:'水得金生——流动即深度，每个项目是一条新的河道，你不是在换方向是在拓宽流域',tags:['深度','专业']},
+      {industry:'学术/科研',score:92,reason:'水主智——三十五岁的图纸五十五岁还在用，这是水的时间尺度',tags:['学术','长周期']},
+      {industry:'媒体/编辑',score:87,reason:'信息即水，渠道即直觉——你不是在追热搜，是在感知暗流',tags:['表达','信息']},
+      {industry:'量化交易',score:85,reason:'水与金相生——流动性与逻辑同频，分钟级决策不靠冲动靠系统',tags:['金融','算法']},
+      {industry:'心理/辅导',score:83,reason:'水主深度共情——你不是在安慰人，是在潜入对方的水域找到暗礁',tags:['咨询','疗愈']}
+    ],
+    good: [
+      {industry:'数据科学',score:72,reason:'金生水——从数据中找暗流是你的天赋。但业务方频繁改需求会让水的深度被反复截断',tags:['技术','分析']},
+      {industry:'投资分析',score:70,reason:'水主洞察——别人看报表你看趋势。但季度汇报的固定节奏跟水的天然节律有时错位',tags:['金融','研究']},
+      {industry:'法务',score:67,reason:'水主条文间的空隙——别人看条款你看漏洞。但诉讼的对抗性可能让水变得太硬',tags:['法律','合规']}
     ],
     avoid: [
-      {industry:'产品/运营',score:28,reason:'土克水。每日站会、每周OKR——水的天然节律被数据压至水汽全无。',tags:['节奏','调度']},
-      {industry:'销售管理',score:22,reason:'水需深流，销售管理要燃要催——水火不相射。',tags:['管理','激励']}
+      {industry:'产品/运营',score:28,reason:'土克水——每日站会即淤塞，OKR数据压至水汽全无。流程拦住水',tags:['节奏','调度']},
+      {industry:'体制内',score:22,reason:'土克水——规则感压死流动性直觉。二十年不动，水就不再流动了',tags:['制度','固定']},
+      {industry:'项目管理',score:20,reason:'土克水——排期、跟踪、汇报——对你而言不是工具，是把河道填平',tags:['流程','控制']}
     ]
   },
   '火': {
     best: [
-      {industry:'前端/设计',score:93,reason:'火得火助。像素级打磨、AB测转化——燃烧就是你最好的工作状态。',tags:['视觉','表达']},
-      {industry:'销售/市场',score:91,reason:'火主外放。即时应激天然在线，每一次 pitch 都是燃料补给。',tags:['外向','沟通']},
-      {industry:'内容/自媒体',score:89,reason:'表达不是技能是燃料。你不需要被激励——你本身就燃。',tags:['创作','传播']}
+      {industry:'前端/设计',score:93,reason:'火得火助——像素级打磨不是消耗，是被用户即时反馈持续点燃',tags:['视觉','表达']},
+      {industry:'销售/市场',score:91,reason:'火主外放——成交不是交易，是燃烧的即时回响。每一次pitch都是燃料',tags:['外向','沟通']},
+      {industry:'内容/自媒体',score:89,reason:'表达不是技能是燃料——你不需要被激励，你本身就燃',tags:['创作','传播']},
+      {industry:'品牌营销',score:87,reason:'火得木生——品牌在燃烧中成形。campaign上线日就是你的能量补给日',tags:['营销','创意']},
+      {industry:'演艺/主持',score:85,reason:'火主被看见——聚光灯不是压力是氧气。即时反馈在血液里',tags:['表达','舞台']}
+    ],
+    good: [
+      {industry:'产品经理',score:72,reason:'火生土——你的外放能把团队点燃。但需求文档和prd评审会让火觉得在被闷着烧',tags:['产品','协调']},
+      {industry:'教育',score:70,reason:'火生土——站在讲台上你是燃的。但备课、批改、教务——那些不是燃烧是维持',tags:['教学','输出']},
+      {industry:'客服/社区运营',score:68,reason:'火主即时回应——用户的问题瞬间点燃你的解决方案。但重复问题会让你觉得在烧空燃料',tags:['服务','互动']}
     ],
     avoid: [
-      {industry:'后端/数据',score:20,reason:'水克火。优化上线三月方见效，三周已烧干。',tags:['深度','孤寂']},
-      {industry:'风控/审计',score:15,reason:'火需反馈，风控不给——一份报告写两周，中间不聊天。',tags:['精确','检查']}
+      {industry:'后端/数据',score:20,reason:'水克火——优化上线三月方见效，三周已烧干。没有观众的火会自熄',tags:['深度','孤寂']},
+      {industry:'风控/审计',score:15,reason:'水克火——火需要直觉判断，风控只有逐条对照。一份报告写两周中间不聊天',tags:['精确','检查']},
+      {industry:'银行柜面/后台',score:18,reason:'水克火——五点轧账、双人复核、监控全程。节奏太慢，燃烧无处安放',tags:['制度','重复']}
     ]
   },
   '土': {
     best: [
-      {industry:'产品经理',score:94,reason:'土主承载。左火右金，顶上是OKR倒计时——多方拉扯是你的日常节奏不是消耗。',tags:['协调','统筹']},
-      {industry:'运营/管理',score:91,reason:'火土相成。把火的外放落地成执行，把金的逻辑翻译成人话。',tags:['执行','协调']},
-      {industry:'行政/体制',score:88,reason:'土主年限与秩序。制度是你的骨骼不是牢笼，越稳越上。',tags:['制度','稳定']}
+      {industry:'产品经理',score:94,reason:'土主承载——左火右金，顶上是OKR倒计时。多方拉扯不是消耗是你的日常节奏',tags:['协调','统筹']},
+      {industry:'运营/管理',score:91,reason:'火土相成——把火的外放落地成执行，把金的逻辑翻译成人话。你是团队里那个让事情真实发生的人',tags:['执行','协调']},
+      {industry:'行政/体制',score:88,reason:'土主年限与秩序——制度是你的骨骼不是牢笼，越稳越上',tags:['制度','稳定']},
+      {industry:'银行/信贷审批',score:86,reason:'土金相生——流程即血脉。每一道审批不是障碍是你专业性的刻度',tags:['金融','银行']},
+      {industry:'HR/人事',score:84,reason:'土主承载——制度和人的平衡，只有土日主天然知道那个点在哪里',tags:['管理','人才']}
+    ],
+    good: [
+      {industry:'财务/会计',score:73,reason:'土生金——数字的秩序感让你舒适。但月末年末的爆发式加班节奏跟土的匀速天性相冲',tags:['财务','精确']},
+      {industry:'供应链管理',score:70,reason:'土主流程——从原料到交付，每一个节点都是你骨骼的延伸。但突发断供会冲击你的秩序感',tags:['物流','协调']},
+      {industry:'建筑/房地产',score:68,reason:'土得土扶——从土地到楼宇，你是那个把蓝图落成实体的角色。但行业周期波动对土的稳定感是一种挑战',tags:['实体','长周期']}
     ],
     avoid: [
-      {industry:'初创/自由职业',score:25,reason:'木克土。自由职业是木之生发——土日主在不确定中每日被消耗。',tags:['自由','冒险']},
-      {industry:'创意/广告',score:22,reason:'木克土。每日要求推翻昨日的规则——而规则是土的天性。',tags:['创新','颠覆']}
+      {industry:'初创公司（早期）',score:25,reason:'木克土——没有流程的土壤会散。自由过头对你不是解放是失控',tags:['自由','冒险']},
+      {industry:'自由职业',score:22,reason:'木克土——土需要框架来承载，自由把框架抽走了。不确定性不是刺激是消耗',tags:['独立','无结构']},
+      {industry:'创意/广告',score:20,reason:'木克土——每日推翻昨日的规则，而规则是土的天性。反复翻耕的土不长东西',tags:['创新','颠覆']}
     ]
+  }
+};
+
+// ============================================================
+// 日主深度解读
+// ============================================================
+
+const DAY_MASTER_DEEP = {
+  '金': {
+    essence: '框架感先于感受。你是那个在没有地图的荒野里自动画出坐标系的人。',
+    energySource: '独处、深度工作、把一件事做到别人做不到的精度',
+    energyDrain: '高频社交、反复修改方向、没有标准的模糊任务',
+    careerRhythm: '精密型单点突破 > 发散型多点开花。不是你不会发散——是你的精密在发散中被稀释了。',
+    industryMatch: '金得金扶——逻辑是本能不是技能。金水相生——模型即直觉。土生金——制度是你的燃料不是牢笼。',
+    warning: '金日主最大的职业陷阱不是进错了行业——是在一个需要你不断解释自己的行业里耗了太久。你的价值不需要翻译。'
+  },
+  '木': {
+    essence: '生长欲先于规则。你天生知道什么东西可以长，什么东西已经死了。',
+    energySource: '新项目启动期、从0到1、看到东西在生长',
+    energyDrain: '重复性劳动、被制度反复修剪、没有成长空间的岗位',
+    careerRhythm: '创新型探索未知 > 维护型维持现状。你不是不想守——是守让你枯萎。',
+    industryMatch: '木得水生——创意有根。木火通明——直觉即判断。木生火——点燃别人之前你自己先燃。',
+    warning: '木日主最深的消耗不是加班——是被反复告知"这个方向不对"。每次被修剪，你失去的不是时间，是生长的意愿。'
+  },
+  '水': {
+    essence: '流动感先于一切。不被定义是你的天赋，被固定在一个位置是对你的误诊。',
+    energySource: '深度思考、跨领域连接、信息自由流动',
+    energyDrain: '每日站会、固定流程、被数据指标框死',
+    careerRhythm: '深度型纵向深入 > 广度型横向铺开。你不是不能做广度——是广度让你浅了。',
+    industryMatch: '水得金生——深度有来源。金水相生——逻辑入水。水主智——知识底层在你那里是通的。',
+    warning: '水日主最怕的不是没有机会——是被锁在一个不需要深度的位置上太久了，忘了自己可以流动。'
+  },
+  '火': {
+    essence: '表达欲先于逻辑。燃烧不是你的选择——是你的默认状态。',
+    energySource: '即时反馈、被人看见、快速迭代',
+    energyDrain: '孤军奋战、长期无反馈、被隐藏在后端',
+    careerRhythm: '输出型持续曝光 > 沉淀型默默积累。不是你不能沉淀——是沉淀太久火会自熄。',
+    industryMatch: '火得木生——燃料有来处。火得火助——越燃越旺。火生土——外放成落地。',
+    warning: '火日主最大的消耗不是工作量大——是在一个"做完了也没人看见"的岗位上燃烧。火需要观众，这不是虚荣，是生存。'
+  },
+  '土': {
+    essence: '秩序感先于自由。你不是不会创新——是你的创新需要有框架才能落地。',
+    energySource: '稳定节奏、多方协调成功、看到系统运转',
+    energyDrain: '无常、不断推翻重来、没有规则的混沌',
+    careerRhythm: '统筹型大局控场 > 单点突破型冲锋。不是你不能冲——是冲完没人善后你会更累。',
+    industryMatch: '土得火生——执行力有来处。火土相成——外放成落地。土生金——制度滋生价值。',
+    warning: '土日主最隐蔽的风险——太能忍了。忍到所有人都觉得你不需要被照顾。体制奖励能力，但不奖励忍耐。'
+  }
+};
+
+// ============================================================
+// 五行调和方案——当你已经在忌入行业
+// ============================================================
+
+const HARMONIZE_TIPS = {
+  '金': {
+    title: '金人入火地（被困前端/销售/创意）',
+    daily: '把外放工作结构化——用你的精密对冲火的发散。每天留一小时独处做深度工作恢复能量。',
+    weekly: '周末用一个精密型副业补水——做开源项目、写技术文档、研究一个算法。不是逃避，是补给。',
+    long: '长远看转后端/数据/风控更合。在现岗位积累的火性经验（用户洞察、审美判断）不是废的——它让你的精密有了人味。'
+  },
+  '木': {
+    title: '木人入金地（被困银行/合规/体制）',
+    daily: '在制度内找到一个你能种东西的角落——内部创新项目、流程优化、新人培训。制度是围墙，围墙内也可以长树。',
+    weekly: '周末用创意副业补水——写公众号、做side project、甚至养植物。木需要看到东西在生长。',
+    long: '长远看跳VC/品牌/教育。在现岗位积累的制度感和流程经验不是废的——你比别人更懂规则，懂规则才能打破规则。'
+  },
+  '水': {
+    title: '水人入土地（被困运营/体制/项目管理）',
+    daily: '把流程当成河道而非围墙——找到流程中可以深挖的专业点。日报不是枷锁，是你梳理深度的工具。',
+    weekly: '在例行工作之外保持一个长期研究——一个你只为自己做的深度项目。不是为了跳槽，是为了记住水的深度。',
+    long: '长远看转咨询/学术/交易。在现岗位积累的流程感和执行经验不是废的——水需要河道才能流得更远。'
+  },
+  '火': {
+    title: '火人入水地（被困后端/风控/银行）',
+    daily: '在精密工作中埋反馈点——小步快跑而非一步到位。把一个大任务拆成能即时验证的小节点。每过一个节点就是一次燃料补给。',
+    weekly: '用side project保持燃烧——一个能让你即时看到结果的个人项目。不是为了赚钱，是为了不让火熄。',
+    long: '长远看转前端/市场/内容。在现岗位积累的逻辑能力和系统思维不是废的——它们让你的火不再乱烧，烧到该烧的地方。'
+  },
+  '土': {
+    title: '土人入木地（被困初创/自由职业/创意行业）',
+    daily: '在自由中主动建立你的框架——自己设SOP、自己定节奏。把不确定性转化为你设计的系统，你就是你自己的制度。',
+    weekly: '每周做一次"秩序收束"——整理所有正在发散的事情，按优先级排程。这不是束缚你，是让你在混沌中站稳。',
+    long: '长远看转成熟公司中层。在现岗位积累的应变能力和创新思维不是废的——当你能同时驾驭秩序和自由，你是极少数。'
   }
 };
 
@@ -371,6 +519,8 @@ function showReport() {
   if (!currentBazi) return;
   const el = currentBazi.dayElement;
   const rec = RECOMMENDATIONS[el];
+  const deep = DAY_MASTER_DEEP[el];
+  const harmonize = HARMONIZE_TIPS[el];
   if (!rec) return;
 
   document.getElementById('page-home').style.display = 'none';
@@ -379,7 +529,7 @@ function showReport() {
   document.getElementById('nav-home').style.color = '#78716c';
   document.getElementById('nav-about').style.color = '#78716c';
 
-  const genMatchHTML = (items, level, label, cls) => items.map(m => `
+  const genMatchHTML = (items, cls) => items.map(m => `
     <div class="match-card">
       <div class="bar-wrap"><div class="bar-fill bar-${cls}" style="width:${m.score}%"></div></div>
       <div class="industry">${m.industry} <span style="font-size:12px;color:#a8a29e">${m.score}分</span></div>
@@ -391,19 +541,80 @@ function showReport() {
   const info = DAY_MASTER_INFO[el];
   document.getElementById('report-content').innerHTML = `
     <div style="text-align:center;margin-bottom:32px">
-      <span class="badge ${info.badge}">${info.element}日主</span>
+      <span class="badge ${info.badge}">${info.element}日主 · ${currentBazi.dayMaster}</span>
       <h1 style="font-size:28px;margin:8px 0">行业五行匹配报告</h1>
-      <p class="sub">基于日主五行 {el} 的行业适配分析</p>
+      <p class="sub">${info.desc}</p>
     </div>
 
+    <!-- 一、日主深度解读 -->
     <div class="section">
-      <p class="level-label level-best" style="font-size:13px">✦ 最佳匹配</p>
-      <div class="match-grid">${genMatchHTML(rec.best,'best','最佳匹配','best')}</div>
+      <h2>${info.element}日主深度解读</h2>
+      <div class="essence-box">
+        <p>${deep.essence}</p>
+      </div>
+      <div class="energy-row">
+        <div class="energy-item">
+          <div class="label">能量来源</div>
+          <div class="value">${deep.energySource}</div>
+        </div>
+        <div class="energy-item">
+          <div class="label">能量消耗</div>
+          <div class="value">${deep.energyDrain}</div>
+        </div>
+      </div>
+      <div class="rhythm-box">
+        <div class="a">${deep.careerRhythm.split('>')[0]}</div>
+        <div class="vs">vs</div>
+        <div class="b">${deep.careerRhythm.split('>')[1]}</div>
+      </div>
+      <div class="deep-card">
+        <p style="font-size:13px;color:#57534e;line-height:1.7">${deep.industryMatch}</p>
+      </div>
+      <div class="warning-box">
+        <p>${deep.warning}</p>
+      </div>
     </div>
 
+    <div class="sep">· · ·</div>
+
+    <!-- 二、最佳匹配 -->
     <div class="section">
-      <p class="level-label level-challenging" style="font-size:13px">⚠ 慎入行业</p>
-      <div class="match-grid">${genMatchHTML(rec.avoid,'challenging','慎入','challenging')}</div>
+      <p class="level-label level-best" style="font-size:13px">✦ 最佳匹配——行业在生你</p>
+      <div class="match-grid">${genMatchHTML(rec.best,'best')}</div>
+    </div>
+
+    <!-- 三、适配行业 -->
+    <div class="section">
+      <p class="level-label level-good" style="font-size:13px">◇ 可做——五行不冲，有利有弊</p>
+      <div class="match-grid">${genMatchHTML(rec.good,'good')}</div>
+    </div>
+
+    <!-- 四、慎入行业 -->
+    <div class="section">
+      <p class="level-label level-challenging" style="font-size:13px">⚠ 慎入——行业在克你</p>
+      <div class="match-grid">${genMatchHTML(rec.avoid,'challenging')}</div>
+    </div>
+
+    <div class="sep">· · ·</div>
+
+    <!-- 五、调和方案 -->
+    <div class="section">
+      <h2>如果你已经在这个行业里</h2>
+      <div class="harmonize-card">
+        <h3>${harmonize.title}</h3>
+        <div class="tip-row">
+          <div class="tip-label">每日调和</div>
+          <div class="tip-text">${harmonize.daily}</div>
+        </div>
+        <div class="tip-row" style="margin-top:10px">
+          <div class="tip-label">每周补给</div>
+          <div class="tip-text">${harmonize.weekly}</div>
+        </div>
+        <div class="tip-row" style="margin-top:10px">
+          <div class="tip-label">长远方向</div>
+          <div class="tip-text">${harmonize.long}</div>
+        </div>
+      </div>
     </div>
 
     <div style="text-align:center;padding:24px;color:#78716c;font-size:14px;line-height:1.8">
