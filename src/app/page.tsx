@@ -15,11 +15,11 @@ export default function Home() {
   const [dayMasterInfo, setDayMasterInfo] = useState<DayMasterInfo | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = useCallback(async (input: BirthdayInput) => {
+  const handleSubmit = useCallback((input: BirthdayInput) => {
     setIsLoading(true);
     setError(null);
     try {
-      const result = await calculateBazi(input);
+      const result = calculateBazi(input);
       setBaziResult(result);
       setDayMasterInfo(getDayMasterInfo(result.dayElement));
 
