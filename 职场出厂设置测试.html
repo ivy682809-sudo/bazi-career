@@ -62,6 +62,14 @@ main{max-width:600px;margin:0 auto;padding:24px 16px 80px}
 .btn-outline:hover{border-color:#1c1917}
 .dim{font-size:12px;color:#a8a29e;text-align:center;margin-top:8px}
 footer{text-align:center;padding:32px 0;color:#a8a29e;font-size:12px;border-top:1px solid #f5f5f4;margin-top:32px}
+/* Unlock */
+.unlock-input{width:100%;max-width:200px;padding:10px 14px;border:2px solid #e7e5e4;border-radius:8px;font-size:16px;text-align:center;letter-spacing:3px;font-family:monospace;font-weight:600;outline:none}
+.unlock-input:focus{border-color:#1c1917}
+.unlock-input.error{border-color:#dc2626;background:#fef2f2}
+.unlock-msg{font-size:13px;margin-top:8px}
+.unlock-msg.error{color:#dc2626}
+.unlock-msg.success{color:#059669}
+.paywall .btn{display:inline-block;border-radius:8px;background:#1c1917;color:#fff;padding:12px 24px;font-size:15px;font-weight:500;text-decoration:none;border:none;cursor:pointer}
 </style>
 </head>
 <body>
@@ -333,11 +341,14 @@ const TYPES = {
 let currentQ = 0;
 let scores = {金:0,木:0,水:0,火:0,土:0};
 let selectedOpt = -1;
+let lastResult = null; // saved result for re-render on unlock
 
 function startQuiz(){
   currentQ = 0;
   scores = {金:0,木:0,水:0,火:0,土:0};
   selectedOpt = -1;
+  lastResult = null;
+  lastRenderData = null;
   document.getElementById('intro-screen').style.display='none';
   document.getElementById('quiz-screen').style.display='block';
   document.getElementById('result-screen').style.display='none';
@@ -394,15 +405,24 @@ function getTypeDist(){
   return {order, total};
 }
 
+let lastRenderData = null; // {t, order, total, typeEmojis}
+
 function showResult(){
   document.getElementById('quiz-screen').style.display='none';
   document.getElementById('result-screen').style.display='block';
 
-  const {type, score} = getTopType();
-  const {order, total} = getTypeDist();
-  const t = TYPES[type];
-
-  const typeEmojis = {金:'⚙️',木:'🌱',水:'🌊',火:'🔥',土:'🏛️'};
+  let data;
+  if (lastRenderData) {
+    data = lastRenderData; // re-render after unlock
+  } else {
+    const {type} = getTopType();
+    const {order, total} = getTypeDist();
+    const t = TYPES[type];
+    const typeEmojis = {金:'⚙️',木:'🌱',水:'🌊',火:'🔥',土:'🏛️'};
+    data = {t, order, total, typeEmojis};
+    lastRenderData = data;
+  }
+  const {t, order, total, typeEmojis} = data;
 
   document.getElementById('result-screen').innerHTML = `
     <div class="result-wrap">
@@ -424,32 +444,42 @@ function showResult(){
         <div class="result-desc">${t.desc}</div>
       </div>
 
-      <div class="match-box" style="text-align:center;background:#fafaf9">
-        <h4>🪪 你的办公室角色</h4>
-        <p style="font-size:15px;font-weight:600;color:#1c1917">${t.officeRole}</p>
-      </div>
-
-      <div class="match-box" style="background:#fafaf9">
-        <h4>🤝 搭子匹配度</h4>
-        <p>${t.buddy}</p>
-      </div>
-
-      <div class="match-box" style="background:#fafaf9">
-        <h4>💢 最烦的东西</h4>
-        <p>${t.hate}</p>
-      </div>
-
-      <div class="match-box" style="background:#fafaf9">
-        <h4>🧭 适配方向</h4>
-        <p>${t.match}</p>
-      </div>
-
-      <div class="cta-box">
-        <p style="font-size:15px;font-weight:600;margin-bottom:4px">截个图，转给你的上班搭子</p>
-        <p style="font-size:13px;color:#78716c;margin-bottom:16px">看看你们办公室谁是什么型——合不合，一读便知。</p>
-        <button class="btn" onclick="scrollToTop()">再做一次</button>
-        <span class="dim" style="display:block;margin-top:12px">想查更详细的行业档案和调整方案？主页有入口。</span>
-      </div>
+      ${isUnlocked() ? `
+        <div class="match-box" style="text-align:center;background:#fafaf9">
+          <h4>🪪 你的办公室角色</h4>
+          <p style="font-size:15px;font-weight:600;color:#1c1917">${t.officeRole}</p>
+        </div>
+        <div class="match-box" style="background:#fafaf9">
+          <h4>🤝 搭子匹配度</h4>
+          <p>${t.buddy}</p>
+        </div>
+        <div class="match-box" style="background:#fafaf9">
+          <h4>💢 最烦的东西</h4>
+          <p>${t.hate}</p>
+        </div>
+        <div class="match-box" style="background:#fafaf9">
+          <h4>🧭 适配方向</h4>
+          <p>${t.match}</p>
+        </div>
+        <div style="text-align:center;padding:16px">
+          <p style="font-size:13px;color:#059669;margin-bottom:4px">✅ 已解锁完整版</p>
+          <p style="font-size:13px;color:#78716c">截个图，转给你的上班搭子——看看你们是绝配还是冤家</p>
+          <button class="btn" onclick="scrollToTop()" style="margin-top:12px">再做一次</button>
+        </div>
+      ` : `
+        <div class="paywall" style="border-radius:12px;border:1px solid #e7e5e4;background:#fff;padding:24px;text-align:center;margin-top:8px">
+          <p style="font-size:15px;font-weight:600;color:#1c1917;margin-bottom:4px">知道类型只是第一步</p>
+          <p style="font-size:13px;color:#78716c;line-height:1.7;margin-bottom:16px">完整版解锁：搭子匹配度 + 办公室角色 + 最烦的东西 + 适配方向</p>
+          <a class="btn" href="${PAYMENT_URL}" target="_blank" style="display:inline-block;text-decoration:none;margin-bottom:4px">解锁完整版 ￥1.99</a>
+          <p class="dim">已有解锁码？</p>
+          <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+            <input type="text" class="unlock-input" id="unlock-input" placeholder="输入解锁码" maxlength="10" autocomplete="off">
+            <button class="btn" onclick="handleUnlock()" style="width:auto;padding:10px 20px;font-size:14px">验证</button>
+          </div>
+          <p class="unlock-msg" id="unlock-msg"></p>
+          <span class="dim" style="display:block;margin-top:12px">付完款自动收到解锁码 · 回来输入即看 · 一次付费永久有效</span>
+        </div>
+      `}
     </div>
   `;
 
@@ -466,6 +496,48 @@ function scrollToTop(){
   document.getElementById('result-screen').style.display='none';
   document.getElementById('intro-screen').style.display='block';
   window.scrollTo(0,0);
+}
+
+// ============================================================
+// 支付与解锁（复用主工具系统）
+// ============================================================
+
+const PAYMENT_URL = 'https://mbd.pub/go/YOUR_PRODUCT_ID';
+
+const VALID_HASHES = ["8ea38e952de78a2aba00b895e7d1e6dfd1299f93a32719e5f85873dd073b7aa8","4e8da3d28625a7a5e87ba6a6231b6a7734da229815addb518386fdb70a642c8e","3088a36b69c489f3c34afecbf8c047bc59737886bfa539d6e95c8af1690b9ed7","8b0cd59c767c80bb0ca1ff82d440e32a783f9d0c68da7b82ea50ea0eaf47df7d","c248d4600b143f428c6eae0662479967171a39fc730bb74c885f0312cd7dc996","fe2ae9dada4c55f3a510a4f3fed68a230f9eed996b8ec7739043c42bdc9d8ed1","dd036f825388b6f0f432d92b2189e459d50cfb895890d198503a7ab5d2988a3a","23875fc5d2b80cd1325235f67fa9c266b1b0c9333b10e5d840ae83c29dfaadd0","3fc2b6effd67a3c35fb2d6c087984b282aad89af6cb34ad88150b383621813ee","b83a72a8503e4c3f1b0c40f1adb272e5d134146c9204824da47095977c592ea6","4aae2c2a5b3a55e3d0e84807319bb34c6d87ca5abb798007d871b02da6ccda6c","78c89630fbd1ba06ba1f8da16c8a03b993b88b2de06c7fbc46f710754212addd","3d9505438a7aafe13c7cf3a64d1509a46b6dc3114ba18ec0ebe162a992eff776","0b633269ab27c7f703b6bfe621a2c62f27b4a0503b068eb2f522d0712da04541","702e1965df7babd3f5d904125398706f306ec16dcb1d1b14af637cb2d8dda414","765dbf025844976d32e5a182d49bc2b9ba445aa0f72710d1015be6826b293ab5","b8199d180d6def7dd7c9b82d57b868cd332179a7dd09eeccea97845cb73fb3e8","42b6a3a6bd7f56173b8800d86733a82183e509be7090561a91bec80eae707b2b","159b5981e07a3b13226b2cdbbe5ae4cd16a20224173eb765ff367c9b6feac4cd","fe9f642c3975c14c6df65c57813e9b27807921e63695c7564934fc82302502b2","b9ce3d7d1fb1e1d7a1b3cc8c05b9c98570e7ac0f5c7655cf05ffed75e533b268","3f40c3b4057c69e35d5312bf5c54e51179ccad30f1e5ebe59b7965e47e41a0c7","6b0a23bed8015fc8d6788bcfa893ced324d0c83b09337e1ba98cd186218cfd47","9a4c7b03c883a70ab46d3816980d7be0fd91bb859eb1489c384db277f5537f19","649845e7002299a51bad1b6357b2767fae530d4cf67fad9f983bceb36cf8ca57","adf6e879aa9077bc9c7b8d3958b3ec09a0a9de15299b0aa28cfee26f771218b8","f291127af1b89c351121b7b46f74c021fca3c089b1b5a6b7a9edcf045deafb12","326194bc9c9ae758e1c0dcac5df4a2d1714ba6f136b7e3a0734c11bb07ce2a08","2fd0bd283d0df4121aa1d476f165091e5daf39003648989fb20da84f3d0e457f","1afa44fb5eee543679194078f3ebe06114409f40eb05a57e5e1df997c02a6852","e02add3eb8357fdb4f5d456a31eeee9ef054d303e7da80ad569e88745eb6e59d","5b2cf018c4f2bfae59f2580cb4c388bfad92d58db665d8624827b35156db6b9e","305004b5efd432b3c065888cb40b8df19c5ceb7e817deb103e2609184609aba5","33c441f169267846a3e8820689541195d2472a85ff6f6d95834392bce57f6ae9","3b31603ed52f97e8433afb2ea2084dd275d3f66e952cdcb0febc1b62ade8600b","aa7def01235eb898d3ab7e005e1b22c464f8cb2d9ffcfad498c1a6bf41645b21","43a6b1f7084fe6aaea6967e61b1af39ac7de55752bfae282edcd796f0ac6e960","4bf9aa2e488556195b1b388c0f538fa69a7ad0f5c59a1c0a4a1d3ed33216b5d0","76c755db472bdcfdb808f34ec83c5bdc41d2e2528d868e38ca65259acd40ef76","fd7666a8af4447ca51d9bc0c839f9efcd521ec5211d645e9f2cf968ef1afa6e1","c7943c2984f1a4cfea8c11a53177542222d245c95d2db9e2d8d5268524299f64","9b53ff6b9511a8d260cb3f170fcc9143d82bb513d6baf05f0d365d1e498efd45","be65771192de050d69e7900c9bcaf35902cf9312645fa2604d890f136a49ea47","ce28d03375a580a8f7b35c007a9b5f09e776b6167b4f526cd36ca7e2f4eb8d2b","a1d69dfb2cb1378df80bef5190034afa69ebda44189a736612f5ca75697a6db5","83869b693de9165917bca9fc2af99fb4f16b04bfd82175152e57cda66f64377d","51940fc458c2db1ba59856e56767bf1e38c94f419d10cdcc56f2a3b415b4e98b","c8426abae5c69637b24f5b208d5423642f1bb1858e213dfb52aeb888b2d629b6","f3f5ec4d13de07a1a13f936a500e657c75ff4cb0ea88f4f08a885a96943bb2dd","7b43537d3bd27c116e420e01ad73ace4c07f78e1e94a1e3d05c8669751e47d6a","c31c42338aec11b74e4291e3757f661654154bcd1ef881308ac3958dd6f4484b","8307a175edd41c5387c7f875315bf2f9839caaa32d65b5939d7d3eb9f868eb7f","3e8400cde049cd0d6ba0440c2f25a2dbd23b9b10dd2cc35963f19b3c59f1e19b","f6eff1a5099012bbd7bd4a2ffc9a7e1026c6b0672b683f489a2257749e994cdd","786e2a3816ded1e12322e83aff0b72309edb8d695b09331b301ee425d16fbc2c","c06e6514d7d6e83551e231a790b0b62279a191ec20f221367e652e40d4eea124","c8d7bd380f6f9c5c40db42358e5cf5844d241d0a5a143e14413b84a516349d6d","210b73df18069bb13a11de0994f7da593a4e6bc4977291e48775e7b6a6a6c430","3405c10cb7c5be24d716a2d0c67079a300c09baa721518409d16cf6776591d8f","40d52a0f5ab821270db826ba4759247d08c4cbf7d84e212dbedff5324699c5a7","375de94eb031342b239ba7ee0afd7e33c8c4e3b8a28be36bb5568f8811ccdd5b","40b4d58174e06793c05746cb7a10f3f05001bc7d963f37f87882bf00e9d4b748","c28ee13f1b52c5397cccf617ccfef66669f01555878d1298925b41a510ca81f8","078c1195ddeea6a1b2c38597eeb3b10daca65ba7e974918c8cf95ef68c3bcd78","03979daa576aab29bd5e334548e81bf9b844f65f859099e09557f8a450d67169","fff30f29edad58a3716145dc7aee5c468bf4254a1f830b57cf2fb7bbc9cc81d6","76df473244dcba35cdf6386f7d46b364350352ba0834a330d1c1b1ac7edb0061","12db6b58b193347b9dc2a0e8a5f28f432f02ae435153630448eedac37677c7e2","9938c6df237167cad10d1bcfbc6f5e4c8503216518a0627c7abcb7ec312af905","93eba623fb4cd5d6edf92e501d7136b3d4c0b87a221579b5c39ae35feedf5f8c","e449f1848e6495146c7bea3166157025fa07a2cad16fa5c179c0a3cbc82b0573","cf32640b5eb93323c4dcf0f2e6db94a4c7b76ca5a3d9e88ecaec53570b8853ea","7900ad6167a1c2ef112eef85b1e2320f5cad2facf1e15858ae7c776f4b6362f5","5c275535b41edc2e5125b6053df73c4040856e8bb5d7c71982c61ca88fd35083","b0fb6f2795859fdfaabbcc3d96c55198fae27aabdbeadcfc3b531ee9146f3f79","03a3cc21d6755813762a08f67d7d133d9d7e834ca23f06a5f29e19fcd8151b24","d140beac4e66be076cb4d42514f72584f3aa2bf453b774217a62d4a0f7e26a32","e8ada4ddf66cc02527f514588e37532fbcb3b043006786adc7dff542cbec6c5c","07b4e36af621bb3104a0116b46c39de4b15b5af2a9d1ad0e99f7cdda3815dadd","6fa18da23575791bd94245378df9069963c0d43d92ae5f369dcdb2b4c8d6967b","1e7e327beb49810456650496e2a884638e90aea1a4f7b49bf77a4fb6f1f3cb15","1a341168eb57fa2aafcffcf9b622624335b582680ece85392d2ea08b1f12b423","f965baeb9f9039e6c137766cc0df73dac08cda1cf5664288a44ac7ca96dbe0f0","7670c7191048d6b736309b6daffd346c02b69bf0a1065f7cbdceb2f10e9507ac","5dffa03fa230e794e79065977c27774f2c58485370860209eacdc750cd04fc6e","57e6de7a5c7dbe2c1aad8204ca7c3788aacf5e0eabd1afc537f08a8d5b301218","14cd1ec6e634164fec48b6bcd2fb8f6a5da3e009a7baf2c3e109f32e5bba5e10","9f5d70cc3e898e584308e805eab20d2e25b890c66525fedf5ea667740a869cac","5841efe7464abbd3f559245c73180b409f3511f3f7b4619b8b4a1f10a2864d4c","cdee823ffe2a5cc3b6527bf933f2aff4156bd4da7cb4f637b9813f32e0e8cb6a","b5c55b5f5fa8fdea18910e0301b9366135bb05e0907ab33de4a5c62f152adf57","7ecc0ee96c44b71348ec2c68035e7b0c5ab6f7092108266e6ac69a9bd39427a8","af04d3c15caf2ad89f7e01a797b94541c2a8ac9cd9ccb24215805d2ffb363518","30548981ddaf1f195f90cba1678c71fd0414ffe07d2fe42f8feea6927e17670d","5b15de1e7cb595ed183c8d81415fc28d607b6cbd0fb812c52240decda4bf9fe4","9eb379bd677e51f7296d74ff7847ae17586c6cd519150c340500cd05038d9d4c","79e056930006e407d658ebf6bc438cbb345b12cdf17324fe56f734e99327e1e5","d68fb02e5df18b9edee59af42542d3cc6410aa62d3986a03e5dec6672be78b38","6e583580c4df5de0ade10929803754d15ff0213e09295b338740a74f96a437f7","f6a5093e5611676a7fd13d4ec1c682d1ab30cb62971ce0166fcda730ce70af66"];
+
+async function verifyCode(code) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(code.trim().toUpperCase());
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2,'0')).join('');
+  return VALID_HASHES.includes(hashHex);
+}
+
+function isUnlocked() { return localStorage.getItem('quiz_unlocked') === 'true'; }
+function setUnlocked() { localStorage.setItem('quiz_unlocked', 'true'); }
+
+async function handleUnlock() {
+  const input = document.getElementById('unlock-input');
+  const msg = document.getElementById('unlock-msg');
+  if (!input) return;
+  const code = input.value.trim();
+  if (!code || code.length < 6) {
+    msg.textContent = '请输入完整的解锁码';
+    msg.className = 'unlock-msg error';
+    return;
+  }
+  msg.textContent = '验证中...';
+  msg.className = 'unlock-msg';
+  const valid = await verifyCode(code);
+  if (valid) {
+    setUnlocked();
+    showResult();
+  } else {
+    msg.textContent = '解锁码无效，请检查后重试';
+    msg.className = 'unlock-msg error';
+  }
 }
 </script>
 </body>
