@@ -135,57 +135,141 @@ function calculateBazi(year,month,day,hour){
 // 身强身弱 + 喜用神分析
 // ============================================================
 
-function getStrength(dayElement, monthBranch, dayBranch, hourBranch, gender, year, yearBranch) {
-  // 月支同五行（得令）+ 日支同五行（通根）+ 时支同五行 + 年支同五行 + 月支生我
-  const SEASON = {木:['寅','卯','辰'],火:['巳','午','未'],金:['申','酉','戌'],水:['亥','子','丑'],土:['辰','未','戌','丑']};
-  const BRANCH_TO_ELE={寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水',子:'水',丑:'土'};
-
-  const isMonthSameEle = SEASON[dayElement]?.includes(monthBranch)||false;
-  const isDaySameEle = BRANCH_TO_ELE[dayBranch]===dayElement;
-  const isHourSameEle = BRANCH_TO_ELE[hourBranch]===dayElement;
-  const isYearSameEle = BRANCH_TO_ELE[yearBranch]===dayElement;
-
-  // 月支生我：如木日主在亥月子月（水生木）
+function getStrength(dayElement, monthBranch, dayBranch, hourBranch, yearBranch,
+                     yearStem, monthStem, dayStem, hourStem,
+                     gender, year, month) {
+  // ====== 地支藏干表 ======
+  const BG = {
+    子:{主:'癸'}, 丑:{主:'己',中:'癸',余:'辛'}, 寅:{主:'甲',中:'丙',余:'戊'},
+    卯:{主:'乙'}, 辰:{主:'戊',中:'乙',余:'癸'}, 巳:{主:'丙',中:'戊',余:'庚'},
+    午:{主:'丁',中:'己'}, 未:{主:'己',中:'丁',余:'乙'}, 申:{主:'庚',中:'壬',余:'戊'},
+    酉:{主:'辛'}, 戌:{主:'戊',中:'辛',余:'丁'}, 亥:{主:'壬',中:'甲'}
+  };
+  // ====== 五行映射 ======
+  const B2E={寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水',子:'水',丑:'土'};
+  const S2E={甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
+  const SEASON={木:['寅','卯','辰'],火:['巳','午','未'],金:['申','酉','戌'],水:['亥','子','丑'],土:['辰','未','戌','丑']};
+  // ====== 五行生克链 ======
   const g={木:'火',火:'土',土:'金',金:'水',水:'木'};
   const b={木:'水',火:'木',土:'火',金:'土',水:'金'};
   const r={木:'土',火:'金',土:'水',金:'木',水:'火'};
   const rb={木:'金',火:'水',土:'木',金:'火',水:'土'};
-  const monthBranchEle = BRANCH_TO_ELE[monthBranch]||'';
-  const isMonthGeneratesMe = b[dayElement]===monthBranchEle; // 月支生我
 
-  let score = 0;
-  if(isMonthSameEle) score+=3;
-  if(isDaySameEle) score+=2;
-  if(isHourSameEle) score+=1;
-  if(isYearSameEle) score+=1;
-  if(isMonthGeneratesMe && !isMonthSameEle) score+=1; // 月支生我（不与得令重叠）
+  const el=dayElement;
+  const detail=[], scoreDetail=[];
+
+  // ① 月支得令（同五行季节）→ +3
+  const s1=SEASON[el]?.includes(monthBranch)||false;
+  if(s1){detail.push('月支得令');scoreDetail.push('+3');}
+
+  // ② 日支同五行（日柱坐根）→ +2
+  const s2=B2E[dayBranch]===el;
+  if(s2){detail.push('日支通根');scoreDetail.push('+2');}
+
+  // ③ 时支同五行 → +1
+  const s3=B2E[hourBranch]===el;
+  if(s3){detail.push('时支有根');scoreDetail.push('+1');}
+
+  // ④ 年支同五行 → +1
+  const s4=B2E[yearBranch]===el;
+  if(s4){detail.push('年支有根');scoreDetail.push('+1');}
+
+  // ⑤ 月支五行生日主（印） → +1
+  const monthEle=B2E[monthBranch];
+  const s5=b[el]===monthEle && !s1;
+  if(s5){detail.push('月支生扶(印)');scoreDetail.push('+1');}
+
+  // ⑥ 天干比劫（年/月/时干同日主五行）→ 各+1
+  const otherStems=[yearStem,monthStem,hourStem];
+  const s6a=otherStems.filter(s=>S2E[s]===el).length;
+  if(s6a>0){detail.push('天干比劫×'+s6a);for(let i=0;i<s6a;i++)scoreDetail.push('+1');}
+
+  // ⑦ 天干印星（年/月/时干生日主五行）→ 各+0.5
+  const s7a=otherStems.filter(s=>b[el]===S2E[s]).length;
+  if(s7a>0){detail.push('天干印星×'+s7a);for(let i=0;i<s7a;i++)scoreDetail.push('+½');}
+
+  // ⑧ 地支藏干通根（本气+1 / 中余气+½）
+  let hiddenRoots=0;
+  const hiddenDetail=[];
+  for(const[bn,br]of [['月',monthBranch],['日',dayBranch],['年',yearBranch],['时',hourBranch]]){
+    const hs=BG[br];
+    if(!hs)continue;
+    const entries=[['主',hs['主']],['中',hs['中']],['余',hs['余']]];
+    for(const[level,stem]of entries){
+      if(!stem)continue;
+      if(S2E[stem]===el){
+        if(level==='主'){hiddenRoots++;hiddenDetail.push(bn+'支藏'+stem+'(本气)');}
+        else{hiddenRoots+=0.5;hiddenDetail.push(bn+'支藏'+stem+'('+level+'气)');}
+      }
+    }
+  }
+  if(hiddenDetail.length>0){detail.push('藏干通根:'+hiddenDetail.join('|'));}
+
+  // 算总分
+  let score=s1?3:0;
+  score+=s2?2:0;
+  score+=s3?1:0;
+  score+=s4?1:0;
+  score+=s5?1:0;
+  score+=s6a*1;
+  score+=s7a*0.5;
+  score+=hiddenRoots;
+  score=Math.round(score*10)/10;
 
   const strength = score>=3 ? '身强' : '身弱';
 
-  let fav,unfav,favEles,unfavEles,tip;
+  // ⑨ 调候：冬三月(亥子丑)无火喜火 / 夏三月(巳午未)无水喜水
+  const coldMonths=['亥','子','丑'], hotMonths=['巳','午','未'];
+  const allBranches=[yearBranch,monthBranch,dayBranch,hourBranch];
+  const allStems=[yearStem,monthStem,dayStem,hourStem];
+  const hasFireInChart=allBranches.some(br=>B2E[br]==='火')||allStems.some(s=>S2E[s]==='火');
+  const hasWaterInChart=allBranches.some(br=>B2E[br]==='水')||allStems.some(s=>S2E[s]==='水');
+  let tempNote='';
+  if(coldMonths.includes(monthBranch)&&!hasFireInChart){tempNote='命局偏寒，喜火暖局（不论身强弱）。';}
+  else if(hotMonths.includes(monthBranch)&&!hasWaterInChart){tempNote='命局偏燥，喜水润局（不论身强弱）。';}
 
+  // ⑩ 格局参考
+  let patternNote='';
+  const allSameEleStems=allStems.filter(s=>S2E[s]===el).length;
+  const allSameEleBranches=allBranches.filter(br=>B2E[br]===el||Object.values(BG[br]||{}).some(st=>S2E[st]===el)).length;
+  if(allSameEleStems+allSameEleBranches>=5)patternNote='比劫林立——自我意识强，适合独立作业或创业。';
+  const sealStems=allStems.filter(s=>b[el]===S2E[s]).length;
+  if(sealStems>=2&&score>=3)patternNote+='印旺身强——学得快但容易想多做少，需实战练习推动。';
+
+  // 喜用神
+  const baseFav = strength==='身强'
+    ? [rb[el],r[el],g[el]]
+    : [b[el],el];
+  const baseUnfav = strength==='身强'
+    ? [b[el],el]
+    : [rb[el],r[el],g[el]];
+
+  // 调候修正：寒加火、燥加水进喜用
+  let fav=[...baseFav], unfav=[...baseUnfav];
+  if(coldMonths.includes(monthBranch)&&!hasFireInChart&&!fav.includes('火')){fav.unshift('火');unfav=unfav.filter(e=>e!=='火');}
+  if(hotMonths.includes(monthBranch)&&!hasWaterInChart&&!fav.includes('水')){fav.unshift('水');unfav=unfav.filter(e=>e!=='水');}
+
+  let favEles,unfavEles,tip;
   if(strength==='身强'){
-    fav=[rb[dayElement],r[dayElement],g[dayElement]];
-    unfav=[b[dayElement],dayElement];
-    favEles='克泄耗——目标导向、能输出的环境让你聚焦能量。需要对抗感、完成感，不是被"喂养"。';
-    unfavEles='生扶——太安逸、太被照顾的岗位会让你过剩的能量无处释放。';
-    tip='能量充沛，喜有方向的挑战。适合需要决策力的角色、需要抗压的场景、需要推进力的岗位。忌被过度保护或无限等待——你的能量需要出口。';
+    favEles='克泄耗——目标导向、能输出的环境。需要对抗感和完成感。';
+    unfavEles='生扶——太安逸、太被照顾的岗位会让能量无处释放。';
+    tip='能量充沛，喜有方向的挑战。适合需要决策力、抗压、推进力的岗位。忌被过度保护或无限等待。';
   } else {
-    fav=[b[dayElement],dayElement];
-    unfav=[rb[dayElement],r[dayElement],g[dayElement]];
-    favEles='生扶——能持续给你支持、有师父有同行、有稳定节奏的环境。需要滋养，不需要被掏空。';
-    unfavEles='克泄耗——过度竞争、独自承担、被反复"榨取"输出会让你干涸。';
-    tip='能量需要外部支持，喜稳定滋养的工作环境。适合深耕型角色、需要持续输入积累的场景。忌孤军作战或被迫做自己不擅长的事——没有子弹的枪打不出多远。';
+    favEles='生扶——持续支持、有师父有同行、稳定节奏的环境。需要滋养。';
+    unfavEles='克泄耗——过度竞争、独自承担、反复"榨取"输出会让你干涸。';
+    tip='能量需要外部支持，喜稳定滋养的环境。适合深耕型、需要持续积累的场景。忌孤军作战。';
   }
+  if(tempNote) tip=tempNote+' '+tip;
 
-  const detailParts=[];
-  if(isMonthSameEle) detailParts.push('月支得令');
-  if(isDaySameEle) detailParts.push('日支通根');
-  if(isHourSameEle) detailParts.push('时支有根');
-  if(isYearSameEle) detailParts.push('年支有根');
-  if(isMonthGeneratesMe && !isMonthSameEle) detailParts.push('月支生扶');
-
-  return {strength,score,isMonthSameEle,isDaySameEle,isHourSameEle,isYearSameEle,isMonthGeneratesMe,fav,unfav,favEles,unfavEles,tip,detailText:detailParts.join(' + ')};
+  return {
+    strength, score, detailText: detail.join(' + '),
+    scoreBreakdown: scoreDetail.join(' '),
+    isMonthSameEle:s1, isDaySameEle:s2, isHourSameEle:s3, isYearSameEle:s4, isMonthGeneratesMe:s5,
+    fav, unfav, favEles, unfavEles, tip,
+    tempNote, patternNote,
+    hasDryness:coldMonths.includes(monthBranch)&&!hasFireInChart,
+    hasDampness:hotMonths.includes(monthBranch)&&!hasWaterInChart
+  };
 }
 
 function getFavorable(dayElement, strResult) {
@@ -802,17 +886,23 @@ function showReport(){
   const isHigh=td.rating==='high';
   const isLow=td.rating==='low';
 
-  // 身强身弱（月支+日支+时支+年支+月支生克 综合判断）
+  // 身强身弱（十维专业算法）
   const monthBranch = currentBazi.monthPillar.charAt(1);
   const dayBranch = currentBazi.dayPillar.charAt(1);
   const hourBranch = currentBazi.hourPillar.charAt(1);
   const yearBranch = currentBazi.yearPillar.charAt(1);
+  const yearStem = currentBazi.yearPillar.charAt(0);
+  const monthStem = currentBazi.monthPillar.charAt(0);
+  const dayStem = currentBazi.dayMaster;
+  const hourStem = currentBazi.hourPillar.charAt(0);
   const yearInput = parseInt(document.getElementById('in-year').value);
-  const strResult = getStrength(el, monthBranch, dayBranch, hourBranch, currentGender, yearInput, yearBranch);
+  const monthInput = parseInt(document.getElementById('in-month').value);
+  const strResult = getStrength(el, monthBranch, dayBranch, hourBranch, yearBranch,
+    yearStem, monthStem, dayStem, hourStem,
+    currentGender, yearInput, monthInput);
   const strength = strResult.strength;
   const favorable = getFavorable(el, strResult);
   const strengthStyle = strength === '身强' ? 'color:#059669' : 'color:#6366f1';
-  const detailText = strResult.detailText || '未得令/通根/有根';
 
   document.getElementById('bazi-result').innerHTML=`
     <div class="result">
@@ -823,15 +913,17 @@ function showReport(){
 
       <!-- 身强身弱 -->
       <div class="report-card">
-        <h3>你的能量状态</h3>
-        <p style="font-size:14px;color:#44403c;line-height:1.7;margin-bottom:8px">
-          <span style="font-weight:700;${strengthStyle}">${strength}</span> · ${detailText}
+        <h3>⚖️ 身强身弱分析</h3>
+        <p style="font-size:14px;color:#44403c;line-height:1.7;margin-bottom:4px">
+          结果：<span style="font-weight:700;${strengthStyle}">${strength}</span> · 总分 <strong>${strResult.score}分</strong>（≥3为身强）
         </p>
-        <p style="font-size:12px;color:#a8a29e;margin-top:4px;margin-bottom:10px">
-          月支${monthBranch}${strResult.isMonthSameEle?' ✓同五行':strResult.isMonthGeneratesMe?' ✓生我':''} · 日支${dayBranch}${strResult.isDaySameEle?' ✓通根':''} · 时支${hourBranch}${strResult.isHourSameEle?' ✓有根':''} · 年支${yearBranch}${strResult.isYearSameEle?' ✓有根':''}
-          <br>总分 <strong style="${strengthStyle}">${strResult.score}分</strong>（≥3为身强）
-        </p>
-        <p style="font-size:13px;color:#78716c;line-height:1.6">${favorable.tip}</p>
+        <p style="font-size:12px;color:#a8a29e;margin-bottom:6px">评分明细：${strResult.scoreBreakdown||''}</p>
+        <p style="font-size:13px;color:#44403c;line-height:1.7;margin-bottom:4px">${strResult.detailText}</p>
+        ${strResult.tempNote?`<p style="font-size:12px;color:#d97706;margin-top:6px">🔥 调候：${strResult.tempNote}</p>`:''}
+        ${strResult.patternNote?`<p style="font-size:12px;color:#6366f1;margin-top:4px">📐 格局：${strResult.patternNote}</p>`:''}
+        <div style="margin-top:10px;padding-top:10px;border-top:1px solid #f5f5f4">
+          <p style="font-size:13px;color:#78716c;line-height:1.6">${favorable.tip}</p>
+        </div>
       </div>
 
       <!-- 喜用神 -->
