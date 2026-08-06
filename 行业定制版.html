@@ -880,7 +880,7 @@ function showReport(){
         <h3>📊 同行业日主对比</h3>
         <p style="font-size:13px;color:#78716c;margin-bottom:12px">${ind.name}里，五种日主各自表现如何——不是只有你在挣扎，不同类型在这行里面对的挑战完全不同</p>
         ${(()=>{
-          const mx=getIndustryMatrix(el,indName);
+          const mx=getIndustryMatrix(el,currentIndustry);
           const allEls=['金','木','水','火','土'];
           return allEls.map(e=>{
             const r=mx.ratings[e];
@@ -907,7 +907,7 @@ function showReport(){
       <div class="report-card" style="background:#fafaf9">
         <h3>📅 ${new Date().getFullYear()}年能量</h3>
         ${(()=>{
-          const ye=getYearEnergy(el,indName);
+          const ye=getYearEnergy(el,currentIndustry);
           return `<p style="font-size:13px;color:#44403c;line-height:1.7;margin-bottom:4px"><strong>${ye.yearFull}</strong> · 年运五行属<strong>${ye.yearEle}</strong></p>
           <p style="font-size:13px;color:#44403c;line-height:1.7">${ye.relation}</p>`;
         })()}
