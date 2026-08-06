@@ -669,6 +669,46 @@ function getTransitionPath(dayElement, indName, favorable) {
   return path;
 }
 
+function getIndustryMatrix(dayElement, indName) {
+  // Auto-generate comparison for all 5 day masters in this industry
+  const allEls = ['金','木','水','火','土'];
+  const elNames = {金:'金',木:'木',水:'水',火:'火',土:'土'};
+  const elEmojis = {金:'⚙️',木:'🌱',水:'🌊',火:'🔥',土:'🏛️'};
+  // Ratings from INDUSTRY_DATA
+  const ind = INDUSTRY_DATA[indName];
+  const ratings = {};
+  for (const el of allEls) {
+    const td = ind.types[el];
+    ratings[el] = {rating:td.rating, text:td.ratingText, note:td.ratingNote, elName:elNames[el], emoji:elEmojis[el]};
+  }
+  return {ratings, currentEl:dayElement};
+}
+
+function getYearEnergy(dayElement, indName) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const STEMS = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const BRANCHES = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  const ELE = {甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
+  const yearStem = STEMS[(year-4)%10];
+  const yearBranch = BRANCHES[(year-4)%12];
+  const yearEle = ELE[yearStem];
+  const yearFull = yearStem+yearBranch+'年';
+
+  const g={木:'火',火:'土',土:'金',金:'水',水:'木'};
+  const b={木:'水',火:'木',土:'火',金:'土',水:'金'};
+  const rb={木:'金',火:'水',土:'木',金:'火',水:'土'};
+
+  let relation, advice;
+  if(yearEle === dayElement) {relation='年运与日主同五行——能量平稳，适合深耕积累。不是爆发年，但每一步都扎实。';}
+  else if(b[dayElement] === yearEle) {relation='年运生你的日主——好年。外部能量在滋养你，适合启动新项目、换方向、提出升职。';}
+  else if(rb[dayElement] === yearEle) {relation='年运克你的日主——挑战年。不是不能做事，但会比平时多看三分风险和代价。忌冲动决策，宜稳。';}
+  else if(g[dayElement] === yearEle) {relation='你的日主生年运——输出年。适合教学、分享、搭建体系。注意在输出中保持能量回流，不要只出不进。';}
+  else {relation='年运与你日主无功无过——平稳年。没有特别的顺或逆，做事靠自己基本功。';}
+
+  return {yearFull, yearEle, relation, advice};
+}
+
 // ============================================================
 // App logic
 // ============================================================
@@ -732,7 +772,7 @@ function showPaywall(){
           + 能量周期 + 转行路线 + 行业五行总论<br>
           + 适配评级 + 具体表现 + 细化岗位 + 发展建议 + 调和方案
         </p>
-        ${PAYMENT_URL !== 'https://mbd.pub/go/YOUR_PRODUCT_ID' ? `<a class="btn" href="${PAYMENT_URL}" target="_blank" style="display:inline-block;text-decoration:none;margin-bottom:8px">解锁深度分析 ￥12.9</a>` : `<button class="btn" onclick="alert('请先配置支付链接')" style="margin-bottom:8px">解锁深度分析 ￥12.9</button>`}
+        ${PAYMENT_URL !== 'https://mbd.pub/go/YOUR_PRODUCT_ID' ? `<a class="btn" href="${PAYMENT_URL}" target="_blank" style="display:inline-block;text-decoration:none;margin-bottom:8px">解锁深度分析 ￥15.9</a>` : `<button class="btn" onclick="alert('请先配置支付链接')" style="margin-bottom:8px">解锁深度分析 ￥15.9</button>`}
         <p class="dim" style="margin-top:12px">已有解锁码？</p>
         <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap">
           <input type="text" class="unlock-input" id="unlock-input" placeholder="输入解锁码" maxlength="10" autocomplete="off">
@@ -832,6 +872,44 @@ function showReport(){
           return `<p style="font-size:14px;font-weight:600;color:#1c1917;margin-bottom:4px">最自然的方向：${tp.best}</p>
           <p style="font-size:13px;color:#44403c;line-height:1.7;margin-bottom:8px">${tp.why}</p>
           <p style="font-size:12px;color:#78716c;line-height:1.6">${tp.step}</p>`;
+        })()}
+      </div>
+
+      <!-- 同行业日主对比矩阵 -->
+      <div class="report-card" style="background:#fafaf9">
+        <h3>📊 同行业日主对比</h3>
+        <p style="font-size:13px;color:#78716c;margin-bottom:12px">${ind.name}里，五种日主各自表现如何——不是只有你在挣扎，不同类型在这行里面对的挑战完全不同</p>
+        ${(()=>{
+          const mx=getIndustryMatrix(el,indName);
+          const allEls=['金','木','水','火','土'];
+          return allEls.map(e=>{
+            const r=mx.ratings[e];
+            const isMe = e===el;
+            const barColor = r.rating==='high'?'#10b981':r.rating==='low'?'#ef4444':'#d97706';
+            const barWidth = r.rating==='high'?'100%':r.rating==='low'?'30%':'55%';
+            return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;padding:${isMe?'8px':'4px'} 0;${isMe?'background:#fafaf9;border-radius:8px;padding:8px':''}">
+              <span style="font-size:18px;width:28px;text-align:center">${r.emoji}</span>
+              <div style="flex:1">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px">
+                  <span style="font-size:13px;font-weight:${isMe?'700':'400'};color:#1c1917">${r.elName}日主${isMe?' ← 你':''}</span>
+                  <span style="font-size:11px;color:#a8a29e">${r.text}</span>
+                </div>
+                <div style="height:4px;background:#e7e5e4;border-radius:2px;overflow:hidden">
+                  <div style="height:4px;width:${barWidth};background:${barColor};border-radius:2px"></div>
+                </div>
+              </div>
+            </div>`;
+          }).join('');
+        })()}
+      </div>
+
+      <!-- 流年能量 -->
+      <div class="report-card" style="background:#fafaf9">
+        <h3>📅 ${new Date().getFullYear()}年能量</h3>
+        ${(()=>{
+          const ye=getYearEnergy(el,indName);
+          return `<p style="font-size:13px;color:#44403c;line-height:1.7;margin-bottom:4px"><strong>${ye.yearFull}</strong> · 年运五行属<strong>${ye.yearEle}</strong></p>
+          <p style="font-size:13px;color:#44403c;line-height:1.7">${ye.relation}</p>`;
         })()}
       </div>
 
