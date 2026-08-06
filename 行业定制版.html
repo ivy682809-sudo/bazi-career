@@ -623,6 +623,53 @@ const INDUSTRY_DATA = {
 };
 
 // ============================================================
+// 动态板块：公司规模匹配 + 能量周期 + 转行路线
+// ============================================================
+
+function getCompanyFit(dayElement, indName) {
+  const data = {
+    '金':{best:'大公司 / 成熟平台',reason:'金主精密与系统——大公司的完善流程是你骨骼的延伸。初创的混乱是金的消耗源，中型是安全区，一旦上了轨道你能推到别人推不到的位置。',order:'大公司 > 中型 > 初创',detail:'大公司：你的精密度在制度化环境中有价值。中型：可做但要确保你有流程话语权。初创：只在内部架构师或运营负责人角色下考虑——自由失控对金是最隐蔽的陷阱。'},
+    '木':{best:'初创 / 中小公司 / 创新部门',reason:'木主生长——大公司的层级和制度不是框架是围墙。你在能看到生长的地方自然运转。中型是平衡点——有资源有空间。',order:'初创 > 中型 > 大公司',detail:'初创：你能亲手种东西。中型：有资源做你想做的。大公司：只在创新孵化或边缘创新团队考虑——被编进日常运转的木会枯萎。'},
+    '水':{best:'中型平台 / 研究型机构 / 独立',reason:'水主深度与流动——太大的公司锁死你的流动，太小的公司没有深度课题给你挖。中型有深度也有空间。',order:'中型 > 独立 > 大公司',detail:'中型：深度课题+自由流动。独立：完全自由但需要稳定的水源。大公司：只在研发/策略/专家岗考虑——远离日常运营。'},
+    '火':{best:'中大型公司 / 高增长赛道',reason:'火主燃烧与表达——你需要观众。太小没人看，太大没人认得你。中大型有舞台也有反馈。',order:'中大型 > 小型 > 巨型',detail:'中大型：舞台大小刚好，你能被看见。小型：可以但要选表达型岗位。巨型：容易被淹没——在别人看不到的角落你的火会自熄。'},
+    '土':{best:'大型公司 / 体制 / 成熟机构',reason:'土主承载与框架——越大的系统越需要你做稳定。初创的不确定性对土是消耗源。大公司的流程是你站稳的基础。',order:'大公司 > 中型 > 初创',detail:'大公司：你的骨架是公司需要的。中型：可做，需要你主动建制度。初创：只在有明确流程的中后期考虑——早期初创对土是系统性消耗。'}
+  };
+  return data[dayElement];
+}
+
+function getEnergyCycle(dayElement, birthMonth) {
+  const monthMap = {1:'冬季·水旺',2:'冬末·水木交',3:'春季·木旺',4:'春末·木火交',5:'夏季·火旺',6:'夏末·火土交',7:'盛夏·火旺',8:'夏末·火土交',9:'秋季·金旺',10:'秋末·金水交',11:'冬季·水旺',12:'冬中·水旺'};
+  const elSeason = {
+    '木':{strong:[1,2,3,4],weak:[7,8],tip:'春冬为顺——木得水生。农历十月到次年三月是你能量上升周期。夏天注意耗散——不是不能做事，是需要比平时更多的有意识补给。'},
+    '火':{strong:[4,5,6,7],weak:[10,11,12],tip:'春夏为顺——火得木生。四月到七月让你事半功倍。冬天注意蓄力——不是低谷，是让你为明年做准备的阶段。'},
+    '土':{strong:[3,6,9,12],weak:[1,2],tip:'四季末为顺——辰未戌丑月是土天然有力的节点。土的能量不像木火那样爆发，但持续稳定。'},
+    '金':{strong:[7,8,9,10],weak:[4,5,6],tip:'秋冬为顺——金得土生。七月到十一月是你的黄金期。夏天可以储备——做不需要太多精度的前期准备。'},
+    '水':{strong:[10,11,12,1],weak:[3,4,5,6],tip:'秋冬为顺——水得金生。十月到次年二月是你能量最足的时段。春夏多观察——你在深度积累，不是在停滞。'}
+  };
+  const season = elSeason[dayElement];
+  const currentMonthEnergy = season.strong.includes(birthMonth) ? '✓ 你出生在能量高位' : season.weak.includes(birthMonth) ? '△ 你出生在能量低位——更需要在日常中主动补给' : '— 你出生在能量转换期';
+  return {
+    birthPeriod: monthMap[birthMonth]||'',
+    birthNote: currentMonthEnergy,
+    strongMonths: season.strong.map(m=>monthMap[m]).join('、'),
+    weakMonths: season.weak.map(m=>monthMap[m]).join('、'),
+    tip: season.tip
+  };
+}
+
+function getTransitionPath(dayElement, indName, favorable) {
+  const pathMap = {
+    '木':{best:'品牌/教育/VC/设计/自媒体', why:'木主生发——这些行业让你种东西。不用推翻现有积累——在任何一个行业里都有品牌、教育、创新孵化这类岗位，它们是你最容易过渡的方向。', step:'第一步不做辞职。做你现在工作里最接近"生长"的那部分——培训、创新、品牌。哪怕占你百分之二十的时间。把那个方向的经验变成你的跳板。'},
+    '火':{best:'前端/销售/市场/内容/演艺', why:'火主表达——从被忽视到被看见需要一个表达通道。不是换老板——是换一个需要你表达的角色。', step:'第一步：在现公司找到一个你能上台的机会——分享会、培训、活动主持。把表达变成你能被看见的日常。下一步：带着表达成果去面试能给你舞台的岗位。'},
+    '土':{best:'产品/运营/管理/银行/行政', why:'土主承载——框架是你的第一需要。往制度和流程完善的地方走，靠你的稳定性打开新路。', step:'第一步：整理你现在工作中搭建过的流程和制度。不是拿业绩说话——拿你做的系统说话。下一步：面试时展示你能在一个混乱部门建立秩序。'},
+    '金':{best:'后端/风控/投行/法律/数据分析', why:'金主精密——逻辑是你进入任何新领域的默认语言。找到需要结构化和精密度的工作环境。', step:'第一步：在现岗位找到最需要精密度和逻辑的部分——做到别人做不到的程度。用专业度说话，比三份简历更有效。下一步：去一个以精密为核心竞争力的领域。'},
+    '水':{best:'咨询/学术/交易/媒体/心理', why:'水主深度——从一个宽泛的岗位转到一个需要钻研的岗位是最自然的方向。你的深度是你最不可替代的东西。', step:'第一步：在现工作中找到你最能往下挖的主题——把它当成研究课题来做。发表你的见解——哪怕只在内部。下一步：带着你的深度去敲需要深度的那扇门。'}
+  };
+  const path = pathMap[dayElement];
+  return path;
+}
+
+// ============================================================
 // App logic
 // ============================================================
 let currentBazi = null;
@@ -681,11 +728,11 @@ function showPaywall(){
         <div style="font-size:48px;margin-bottom:12px">🔒</div>
         <p style="font-size:16px;font-weight:700;color:#1c1917;margin-bottom:8px">${currentBazi.dayMaster}日主 × ${ind.name} · 深度定制版</p>
         <p style="font-size:13px;color:#78716c;line-height:1.8;margin-bottom:16px">
-          完整解锁：身强身弱判定 + 喜用神分析 + 行业五行总论<br>
-          + 适配评级 + 具体表现（优势/风险）+ 细化岗位<br>
-          + 发展建议（短期/长期）+ 调和方案
+          完整解锁：身强身弱判定 + 喜用神分析 + 公司规模匹配<br>
+          + 能量周期 + 转行路线 + 行业五行总论<br>
+          + 适配评级 + 具体表现 + 细化岗位 + 发展建议 + 调和方案
         </p>
-        ${PAYMENT_URL !== 'https://mbd.pub/go/YOUR_PRODUCT_ID' ? `<a class="btn" href="${PAYMENT_URL}" target="_blank" style="display:inline-block;text-decoration:none;margin-bottom:8px">解锁深度分析 ￥4.99</a>` : `<button class="btn" onclick="alert('请先配置支付链接')" style="margin-bottom:8px">解锁深度分析 ￥4.99</button>`}
+        ${PAYMENT_URL !== 'https://mbd.pub/go/YOUR_PRODUCT_ID' ? `<a class="btn" href="${PAYMENT_URL}" target="_blank" style="display:inline-block;text-decoration:none;margin-bottom:8px">解锁深度分析 ￥12.9</a>` : `<button class="btn" onclick="alert('请先配置支付链接')" style="margin-bottom:8px">解锁深度分析 ￥12.9</button>`}
         <p class="dim" style="margin-top:12px">已有解锁码？</p>
         <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap">
           <input type="text" class="unlock-input" id="unlock-input" placeholder="输入解锁码" maxlength="10" autocomplete="off">
@@ -751,6 +798,41 @@ function showReport(){
           <strong>喜用对应的行业方向：</strong><br>
           ${favorable.fav.map(e=>'· '+favElemToIndustry(e)).join('<br>')}
         </p>
+      </div>
+
+      <!-- 公司规模匹配 -->
+      <div class="report-card" style="background:#fafaf9">
+        <h3>🏢 公司规模适配</h3>
+        ${(()=>{
+          const cf=getCompanyFit(el,ind.name);
+          return `<p style="font-size:14px;font-weight:600;color:#1c1917;margin-bottom:4px">最佳选择：${cf.best}</p>
+          <p style="font-size:13px;color:#44403c;line-height:1.7;margin-bottom:8px">排序：${cf.order}</p>
+          <p style="font-size:13px;color:#57534e;line-height:1.7">${cf.detail}</p>`;
+        })()}
+      </div>
+
+      <!-- 能量周期 -->
+      <div class="report-card" style="background:#fafaf9">
+        <h3>📅 你的能量周期</h3>
+        ${(()=>{
+          const birthMonth=parseInt(document.getElementById('in-month').value);
+          const ec=getEnergyCycle(el,birthMonth);
+          return `<p style="font-size:13px;color:#44403c;line-height:1.7;margin-bottom:4px">你出生在 <strong>${ec.birthPeriod}</strong> · ${ec.birthNote}</p>
+          <p style="font-size:13px;color:#44403c;line-height:1.7;margin-bottom:4px"><strong>能量上升期：</strong>${ec.strongMonths}</p>
+          <p style="font-size:13px;color:#44403c;line-height:1.7;margin-bottom:8px"><strong>需要蓄力期：</strong>${ec.weakMonths}</p>
+          <p style="font-size:12px;color:#78716c;line-height:1.6">${ec.tip}</p>`;
+        })()}
+      </div>
+
+      <!-- 转行路线 -->
+      <div class="report-card" style="background:#fafaf9">
+        <h3>🧭 如果你想转行</h3>
+        ${(()=>{
+          const tp=getTransitionPath(el,ind.name,favorable);
+          return `<p style="font-size:14px;font-weight:600;color:#1c1917;margin-bottom:4px">最自然的方向：${tp.best}</p>
+          <p style="font-size:13px;color:#44403c;line-height:1.7;margin-bottom:8px">${tp.why}</p>
+          <p style="font-size:12px;color:#78716c;line-height:1.6">${tp.step}</p>`;
+        })()}
       </div>
 
       <div class="report-card">
