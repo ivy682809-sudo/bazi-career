@@ -239,7 +239,7 @@ function calculateBazi(year, month, day, hour) {
   const ybi = (effYear - 4) % 12;
 
   // 月柱
-  let mbi = (month + 1) % 12;
+  let mbi = month % 12;
   const termDay = getTermDay(year, month);
   if (day < termDay) mbi = (mbi + 11) % 12;
   const firstStem = YEAR_STEM_MONTH[ysi];
