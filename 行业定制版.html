@@ -72,6 +72,17 @@ input[type=number]:focus{border-color:#a8a29e}
         <div><label class="block">月</label><input type="number" id="in-month" min="1" max="12" value="6"></div>
         <div><label class="block">日</label><input type="number" id="in-day" min="1" max="31" value="15"></div>
       </div>
+      <div class="input-grid">
+        <div><label class="block">时 (0-23)</label><input type="number" id="in-hour" min="0" max="23" value="12"></div>
+        <div>
+          <label class="block">性别</label>
+          <select id="in-gender" style="width:100%;border-radius:8px;border:1px solid #e7e5e4;padding:10px;font-size:18px;font-weight:500;color:#1c1917;background:#fff;outline:none;text-align:center">
+            <option value="男">男</option>
+            <option value="女" selected>女</option>
+          </select>
+        </div>
+        <div style="display:flex;align-items:flex-end"><p style="font-size:12px;color:#a8a29e;padding-bottom:12px">不知道出生时间默认午时（12:00），对日主无影响</p></div>
+      </div>
       <button class="btn" onclick="doBazi()">查看我的日主</button>
       <p class="dim">输入公历生日，所有计算在浏览器本地完成</p>
     </div>
@@ -124,34 +135,59 @@ function calculateBazi(year,month,day,hour){
 // 身强身弱 + 喜用神分析
 // ============================================================
 
-function getStrength(dayElement, monthBranch) {
-  const season = {
-    木:['寅','卯','辰'], 火:['巳','午','未'],
-    金:['申','酉','戌'], 水:['亥','子','丑'],
-    土:['辰','未','戌','丑']
-  };
-  return season[dayElement]?.includes(monthBranch) ? '身强' : '身弱';
-}
+function getStrength(dayElement, monthBranch, dayBranch, hourBranch, gender, year) {
+  // 核心：月支是否同五行（得令）+ 日支是否同五行（通根）+ 是否有生扶
+  const SEASON = {木:['寅','卯','辰'],火:['巳','午','未'],金:['申','酉','戌'],水:['亥','子','丑'],土:['辰','未','戌','丑']};
+  const STEM_TO_ELE={甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
+  const BRANCH_TO_ELE={寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水',子:'水',丑:'土'};
 
-function getFavorable(dayElement, isStrong) {
+  const isMonthSameEle = SEASON[dayElement]?.includes(monthBranch)||false;
+  const isDaySameEle = BRANCH_TO_ELE[dayBranch]===dayElement;
+  const isHourSameEle = BRANCH_TO_ELE[hourBranch]===dayElement;
+
+  // Gender influences: 男属阳为顺，女属阴为顺；年干阴阳决定大运顺逆
+  const yearStemIdx = (year-4)%10;
+  const isYangYear = yearStemIdx%2===0; // 甲丙戊庚壬为阳年
+  let score = 0;
+  if(isMonthSameEle) score+=3;
+  if(isDaySameEle) score+=2;
+  if(isHourSameEle) score+=1;
+
+  const strength = score>=3 ? '身强' : '身弱';
+
+  // 五行生克链
   const g={木:'火',火:'土',土:'金',金:'水',水:'木'}; // 我生
   const b={木:'水',火:'木',土:'火',金:'土',水:'金'}; // 生我
   const r={木:'土',火:'金',土:'水',金:'木',水:'火'}; // 我克
   const rb={木:'金',火:'水',土:'木',金:'火',水:'土'}; // 克我
 
-  if(isStrong) return {
-    fav:[rb[dayElement],r[dayElement],g[dayElement]],
-    unfav:[b[dayElement],dayElement],
-    tip:'身强——能量充沛，需要方向和约束。喜对应的行业：让你有明确目标的、需要克服阻力的、能外放表达的环境。忌过于安逸、只进不出、被过度滋养的位置。',
-    favEles:'克泄耗——喜欢有挑战、有对抗、有输出的环境',
-    unfavEles:'生扶——注意不要把自己放在太安逸、太被照顾的位置上'
-  };
+  let fav,unfav,favEles,unfavEles,tip;
+
+  if(strength==='身强'){
+    fav=[rb[dayElement],r[dayElement],g[dayElement]];
+    unfav=[b[dayElement],dayElement];
+    favEles='克泄耗——目标导向、能输出的环境让你聚焦能量。需要对抗感、完成感，不是被"喂养"。';
+    unfavEles='生扶——太安逸、太被照顾的岗位会让你过剩的能量无处释放。';
+    tip='能量充沛，喜有方向的挑战。适合需要决策力的角色、需要抗压的场景、需要推进力的岗位。忌被过度保护或无限等待——你的能量需要出口。';
+  } else {
+    fav=[b[dayElement],dayElement];
+    unfav=[rb[dayElement],r[dayElement],g[dayElement]];
+    favEles='生扶——能持续给你支持、有师父有同行、有稳定节奏的环境。需要滋养，不需要被掏空。';
+    unfavEles='克泄耗——过度竞争、独自承担、被反复"榨取"输出会让你干涸。';
+    tip='能量需要外部支持，喜稳定滋养的工作环境。适合深耕型角色、需要持续输入积累的场景。忌孤军作战或被迫做自己不擅长的事——没有子弹的枪打不出多远。';
+  }
+
+  return {strength,score,isMonthSameEle,isDaySameEle,isHourSameEle,fav,unfav,favEles,unfavEles,tip};
+}
+
+function getFavorable(dayElement, strResult) {
+  const favInfo = strResult.fav.map(e=>favElemToIndustry(e));
+  const unfavInfo = strResult.unfav.map(e=>favElemToIndustry(e));
   return {
-    fav:[b[dayElement],dayElement],
-    unfav:[rb[dayElement],r[dayElement],g[dayElement]],
-    tip:'身弱——需要滋养和支持才能持续输出。喜对应的行业：给你稳定支持的、不需要独自扛住的、有师父有同行能持续充电的环境。忌过度竞争、独自承担、持续对抗的生态。',
-    favEles:'生扶——喜欢有支持、有滋养、有同类的环境',
-    unfavEles:'克泄耗——注意不要把自己放在过度竞争、独自承担的位置上'
+    fav:strResult.fav,unfav:strResult.unfav,
+    favEles:strResult.favEles,unfavEles:strResult.unfavEles,
+    tip:strResult.tip,
+    favInfo,unfavInfo
   };
 }
 
@@ -501,6 +537,88 @@ const INDUSTRY_DATA = {
         harmonize:'土日主在临床一线。发挥你天然的结构感——做科室里的「那个能搞定事的人」：排班、流程优化、病例管理。在高压一线中把秩序变成你的护城河。'
       }
     }
+  },
+  '制造业': {
+    name:'制造业/供应链', overview:'制造业属土金——土主承载与规模，金主精密与流程。从原料到成品，从工厂到落地，每一个节点都是土金相生的结果。流水线在金土运转中成型，不是你一个人——是一个系统。',
+    types: {
+      '金':{rating:'high',ratingText:'⭐⭐⭐ 高适配',ratingNote:'金得金扶——精密制造、质量管控、工程管理方向天然契合',
+        pro:'精密制造、质量管理、工艺流程、供应链优化。金主条理——把混乱整理成可复制的系统是你最擅长的。',
+        con:'创意设计、营销宣传、高频社交。火克金——创造性发散不是你的工作方式。',
+        roles:'质量工程师 / 厂长 / 供应链分析师 / IE工程师 / 采购经理',
+        shortTerm:'走技术管理方向——从车间做起，熟悉每一个流程节点的精度需求。你不是那个看图纸的人——是那个让图纸变成实物的关键。',
+        longTerm:'成为制造系统管理者——工厂总监、供应链VP、运营总裁。金日主在制造业的终点是建一个别人复刻不了的体系。',
+        harmonize:'金日主在品牌或创意岗。把创意流程化——你不是要自己想点子，是把别人的点子变成能重复执行的工序。你的价值不在灵感——在执行精度上。'},
+      '木':{rating:'low',ratingText:'⭐ 低适配',ratingNote:'金克木——流水线和重资产环境不适合需要生长的木日主',
+        pro:'可持续制造、绿色供应链、ESG管理。在制造的最边缘——你能找到生长空间。',
+        con:'传统流水线管理、重资产决策、精密制造。金克木——制度和标准化是你最不适应的部分。',
+        roles:'可持续项目经理 / ESG分析师 / 供应链创新 / 绿色工厂设计 / 循环经济顾问',
+        shortTerm:'走制造边缘的绿色创新方向——可持续供应链、循环经济。传统工厂的硬制度不适合你，但制造业的绿色转型需要你这种能看到"生长"的人。',
+        longTerm:'成为可持续制造或ESG领域的专家——在制造业变革的浪潮中你站最前沿。木日主在制造业的终点不是传统厂长——是推动行业走向可再生的引领者。',
+        harmonize:'木日主在传统工厂。在流程中找生长点——工序创新、团队培训、新项目孵化。你的创造感不需要推翻整个制度——在制度内种一棵树就够了。'},
+      '水':{rating:'mid',ratingText:'⭐⭐ 中等适配',ratingNote:'水得金生——供应链分析、物流优化、深度流程设计方向合适',
+        pro:'供应链战略、物流网络优化、需求预测、系统架构。水主深度与流动——整个供应链的系统在你脑中是一个流动的河道。',
+        con:'工厂一线管理、高频生产调度、重复性作业。土克水——每日产线节奏的固定循环会让水的深度被反复截断。',
+        roles:'供应链分析师 / 物流网络设计师 / 需求规划师 / ERP架构师 / 战略采购',
+        shortTerm:'走供应链分析和物流设计方向——远离工厂一线。你的价值在全局架构，不在按按钮。一个好的供应链优化能省下和创造数倍的直接劳动价值。',
+        longTerm:'成为供应链战略专家——跨国公司的供应链VP、独立物流顾问。水日主在制造业的终点是设计整个流动系统——不站在流水线旁，但让流水线上的所有东西到达正确的地方。',
+        harmonize:'水日主在工厂一线或频繁调度岗。把生产数据变成研究课题——从每天的排产数据中找到可以优化的规律。不是看不起执行——是在执行中保持你的研究习惯就是生存。'},
+      '火':{rating:'low',ratingText:'⭐ 低适配',ratingNote:'水克火——流水线和制造业的重复节奏不适合燃烧型日主',
+        pro:'工业品牌营销、制造业会展、产业互联网、制造业新媒体。火主表达——给看不见的人看到你在做的。',
+        con:'工厂运营、重复性生产管理、质检流水线。水克火——无观众的火会自熄，每日一样的节奏没有你燃烧的空间。',
+        roles:'工业品牌经理 / 制造业B2B市场 / 产业互联网运营 / 会展策划 / 内容传播',
+        shortTerm:'走制造业的品牌和市场方向——在展会、产业媒体、线上平台。把冷冰冰的工厂变成能被看见的故事。你不是做产品的人——是讲产品故事的人。',
+        longTerm:'成为B2B工业领域的传播专家——国内高端制造业急需的不是更多工程师，是能把工程师的故事说出去的人。火日主在制造业的终点是叫出来的品牌力。',
+        harmonize:'火日主被困在工厂技术岗。主动参与展会、做内部技术分享、做行业传播。用外部表达给自己的日常补充燃料——你的舞台不在于工厂内部，而在于让行业看到你们。'},
+      '土':{rating:'high',ratingText:'⭐⭐⭐ 高适配',ratingNote:'土金相生——制造业是土日主的天然骨架，运营、管理、统筹最稳',
+        pro:'工厂运营、制造管理、供应链总监、产能规划、全流程统筹。土主承载——一个工厂有千百道工序，你来让它们变成一整个东西。',
+        con:'快速迭代的创业型制造、每周推翻的工艺方案、高风险的品类扩张。木克土——方向不确定的制造业对你是系统性消耗。',
+        roles:'工厂厂长 / 运营总监 / 供应链总监 / 制造经理 / 生产计划主管',
+        shortTerm:'走制造管理和运营方向——从车间主管做起，逐渐接管更大的生产单元。你的天赋不是做一件产品——是让一百件产品按时、按质、按量出来。',
+        longTerm:'成为制造体系的高层管理者——运营VP、制造中心负责人、供应链总经理。土日主在制造业的终点是让一个工厂或整条供应链十年安稳运转——不被记住名字，但离了你不行。',
+        harmonize:'土日主在新品试制或频繁变动的制造环境。建框架、定标准——把你面对的混乱变成你设计的流程。你的工作不是跟着变化跑——是让变化跟着你的框架跑。'
+      }
+    }
+  },
+  '自由职业/创业': {
+    name:'自由职业/创业', overview:'不是所有人都该自由。自由职业属木火——木主生长与独立、火主表达与外放。但自由也是一把双刃剑——适合的人如虎添翼，不适合的人散落一地。不是"敢不敢"的问题——是"合不合"的问题。',
+    types: {
+      '金':{rating:'low',ratingText:'⭐ 低适配',ratingNote:'火克金——自由职业对金不是解放是失控。除非有自建体系',
+        pro:'技术顾问、独立架构师、专业的B2B服务。金主精密——如果你有一个成熟的专业方向和一个自建的流程，你可以做极少数活得下来的金系自由人。',
+        con:'没有外部框架的纯自由、随性工作节奏、频繁更换方向。火克金——没有deadline的金不是自由是飘着。',
+        roles:'独立技术顾问 / 专业B2B服务 / 垂直领域专家 / 自由精算师 / 系统设计师',
+        shortTerm:'先验证你的专业足够深——你在市场上稀缺到别人必须找你。同时自建框架：固定作息、固定产出、固定收入流。自己当自己的甲方才能在自由中存活。',
+        longTerm:'成为某个垂直领域的顶级自由顾问——收费不是按小时，是按问题。金日主在自由的终点是：你只接你需要出面的事，其他已系统化自动运转。',
+        harmonize:'金日主在自由中飘着。马上给自己建结构——每天的日程、每周的产出、每月的复盘。固定流程对你的重要性不比空气低——不要等到收入断了才想到。'},
+      '木':{rating:'high',ratingText:'⭐⭐⭐ 高适配',ratingNote:'木得水生——自由职业和创业是木的天然归属，但要控制发散',
+        pro:'独立创业、品牌主理人、内容创作者、自由设计师、教育创业者。木主生发——你天生知道什么东西可以长，在自由中你有最多的生长点。',
+        con:'容易发散——三周一个idea，两周推翻。木火过旺无金约束就会在启动和推翻之间空转，无法交付。',
+        roles:'创业者 / 独立品牌主理人 / 自媒体人 / 自由内容创作者 / 教育项目创始人',
+        shortTerm:'选一个最想种的方向——只做一个。同时找一个金系合伙人——他负责结构和执行，你负责方向和生长。没有他你只能开花不能结果。',
+        longTerm:'成为创始人或领域品牌创始人——从零到一不是你的一次旅程，是你的终点。木日主在自由的终点是实现一个完整的天赋闭环：发现需求→创造解法→交给市场→持续生长。',
+        harmonize:'木日主容易飘——在自由中找到固定产出。每周发布、每季交付、每年创立新项目。不是限制你的自由——是让你的生长有迹可循。'},
+      '水':{rating:'high',ratingText:'⭐⭐⭐ 高适配',ratingNote:'水主流动——自由职业是水的河道，独立研究、创作、咨询都是主场',
+        pro:'独立研究、自由撰稿人、独立咨询顾问、独立播客主播、独立学者。水主深度与流动——自由让你不被锁在一个位置上太久，每一个新项目都是一条新河道。',
+        con:'创业型自由——需要扩张、建团队、接客服。土克水——拼规模不是你的路子，会拉低你的深度。',
+        roles:'独立研究员 / 自由咨询师 / 深度内容创作者 / 独立学者 / 专业撰稿人',
+        shortTerm:'开始保持一个稳定的输出渠道——专栏、播客、专业平台。同时保持一个长期客户或收入来源。水在自由中最容易干涸——不是因为没能力，是因为没有持续的引水节点。',
+        longTerm:'成为领域思想领袖——你的名字就是品牌，你的研究就是业务。水日主的终点不是做最大的公司——是被最正确的问题找到的那个人。',
+        harmonize:'水日主自由但收入不稳。持续输出——每一个深度内容都可能变成下一个客户或项目。保持高质量的输出，多渠道接水——一个月几个深度客户比一百个散客强得多。'},
+      '火':{rating:'high',ratingText:'⭐⭐⭐ 高适配',ratingNote:'火得木生——自由职业和创业是火的表演场，但要节奏对',
+        pro:'直播创业、短视频创作、社交电商、活动策划、品牌联合创始人。火主外放——自由让你的表达不再被老板改掉，每一次成交都是燃料。',
+        con:'独自干活、无观众反馈、长期产出不稳定。水克火——独自待太久火会自熄。你需要的是一个互动的机制——不是一个人，是一个社区。',
+        roles:'独立主播 / 视频创作者 / 活动策展人 / 品牌联创 / 社交电商主理人',
+        shortTerm:'选表达最快的渠道——直播、视频、活动。在群内找对你的表达有反馈的人，一天一次小的燃料就够了。不需要大成功——只需要持续的反馈。',
+        longTerm:'成为领域表达者——你的个人IP就是你的事业，你的每一天都是新的内容。火日主在自由的终点不是财富自由——是表达自由。',
+        harmonize:'火日主自由但看不到反馈时容易泄气。建立社群、保持直播、保持互动——不需要每天爆量，但需要每天被看到和互动。不是在经营——是在燃烧。'},
+      '土':{rating:'low',ratingText:'⭐ 低适配',ratingNote:'木克土——自由和创业对土日主是最难的赛道。没有流程的自由是失控',
+        pro:'有成熟模式的小微企业主、专业服务工作室、B端稳定客户群的创业者。土主承载——如果已经有了一个自运转的小系统，你能让它持续下去。',
+        con:'高频方向变化、从零到一、无客户无流程的纯粹自由职业。木克土——每天推翻昨天的方向，土在反复翻耕中散掉。',
+        roles:'直营店店主 / 专业服务工作室 / 小企业主 / 有稳定客户的自由职业 / 运营合伙人',
+        shortTerm:'如果创业：自己建制度——定章程、定流程、定复盘。你不是被框住的人——你是靠框架站稳的人。如果没有成熟模式——在加入创业团队前考虑做运营合伙人而不是CEO。',
+        longTerm:'土日主创业的终点是有一个稳定运营的小而美企业——不需要独角兽，但需要能持续运转。你不用改变世界——你让一小块世界十年稳定运转就已经赢了。',
+        harmonize:'土日主自由但失控。马上建制度——日计划、周复盘、月目标、季方向。把自由用在可被管理的框架内——框架不是限制你的牢笼，是你不散架的骨骼。'
+      }
+    }
   }
 };
 
@@ -510,11 +628,15 @@ const INDUSTRY_DATA = {
 let currentBazi = null;
 let currentIndustry = null;
 
+let currentGender='女';
+
 function doBazi(){
   const y=parseInt(document.getElementById('in-year').value);
   const m=parseInt(document.getElementById('in-month').value);
   const d=parseInt(document.getElementById('in-day').value);
-  const result=calculateBazi(y,m,d,12);
+  const h=parseInt(document.getElementById('in-hour').value)||12;
+  currentGender=document.getElementById('in-gender').value;
+  const result=calculateBazi(y,m,d,h);
   currentBazi=result;
   const el=result.dayElement;
   const badge=ELE_BADGES[el];
@@ -585,11 +707,21 @@ function showReport(){
   const isHigh=td.rating==='high';
   const isLow=td.rating==='low';
 
-  // 身强身弱
+  // 身强身弱（新版：月支+日支+时支综合判断）
   const monthBranch = currentBazi.monthPillar.charAt(1);
-  const strength = getStrength(el, monthBranch);
-  const favorable = getFavorable(el, strength === '身强');
+  const dayBranch = currentBazi.dayPillar.charAt(1);
+  const hourBranch = currentBazi.hourPillar.charAt(1);
+  const yearInput = parseInt(document.getElementById('in-year').value);
+  const strResult = getStrength(el, monthBranch, dayBranch, hourBranch, currentGender, yearInput);
+  const strength = strResult.strength;
+  const favorable = getFavorable(el, strResult);
   const strengthStyle = strength === '身强' ? 'color:#059669' : 'color:#6366f1';
+
+  const detailParts = [];
+  if(strResult.isMonthSameEle) detailParts.push('月支得令');
+  if(strResult.isDaySameEle) detailParts.push('日支通根');
+  if(strResult.isHourSameEle) detailParts.push('时支有根');
+  const detailText = detailParts.length > 0 ? detailParts.join(' + ') : '未得令/通根/有根';
 
   document.getElementById('bazi-result').innerHTML=`
     <div class="result">
@@ -602,8 +734,9 @@ function showReport(){
       <div class="report-card">
         <h3>你的能量状态</h3>
         <p style="font-size:14px;color:#44403c;line-height:1.7;margin-bottom:8px">
-          月支 <strong>${monthBranch}</strong> → 日主${el}在${monthBranch}月<span style="font-weight:700;${strengthStyle}">${strength==='身强'?'得令偏强':'失令偏弱'}</span>
+          <span style="font-weight:700;${strengthStyle}">${strength}</span> · ${detailText}
         </p>
+        <p style="font-size:12px;color:#a8a29e;margin-top:4px;margin-bottom:10px">月支${monthBranch} ${strResult.isMonthSameEle?'✓同五行':''} · 日支${dayBranch} ${strResult.isDaySameEle?'✓通根':''} · 时支${hourBranch} ${strResult.isHourSameEle?'✓有根':''}</p>
         <p style="font-size:13px;color:#78716c;line-height:1.6">${favorable.tip}</p>
       </div>
 
