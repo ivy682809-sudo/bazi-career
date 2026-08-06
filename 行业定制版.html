@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>行业定制版 · 日主×行业深度分析</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#faf9f6;color:#1a1a1a;min-height:100vh}
+header{position:sticky;top:0;z-index:50;background:rgba(250,249,246,.9);backdrop-filter:blur(8px);border-bottom:1px solid #e7e5e4;padding:0 16px;height:56px;display:flex;align-items:center;justify-content:center}
+header h1{font-size:17px;font-weight:600;color:#1c1917}
+main{max-width:600px;margin:0 auto;padding:24px 16px 80px}
+.card{border-radius:12px;border:1px solid #e7e5e4;background:#fff;padding:24px;margin-bottom:16px}
+h2{font-size:20px;font-weight:700;color:#1c1917;margin-bottom:16px}
+label.block{display:block;font-size:14px;color:#78716c;margin-bottom:4px}
+input[type=number]{width:100%;border-radius:8px;border:1px solid #e7e5e4;padding:10px;text-align:center;font-size:18px;font-weight:500;outline:none}
+input[type=number]:focus{border-color:#a8a29e}
+.input-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+.btn{width:100%;border-radius:8px;background:#1c1917;color:#fff;padding:12px;font-size:16px;font-weight:500;border:none;cursor:pointer}
+.btn:disabled{opacity:.5}
+.dim{font-size:12px;color:#a8a29e;text-align:center;margin-top:8px}
+.result{margin-top:16px;animation:fadeIn .5s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.master-card{text-align:center;padding:24px}
+.badge{display:inline-block;padding:4px 16px;border-radius:20px;font-size:14px;font-weight:600;margin-bottom:8px}
+.badge-gold{background:#fef3c7;color:#92400e}
+.badge-green{background:#d1fae5;color:#065f46}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-amber{background:#fef3c7;color:#92400e}
+.master{font-size:40px;font-weight:700;color:#1c1917;margin:8px 0}
+.desc{color:#78716c;font-size:14px;line-height:1.6}
+.industry-pick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.ind-btn{padding:14px;border:2px solid #e7e5e4;border-radius:10px;background:#fff;font-size:14px;font-weight:500;cursor:pointer;text-align:center;transition:all .15s}
+.ind-btn:hover{border-color:#a8a29e}
+.ind-btn.selected{border-color:#1c1917;background:#fafaf9}
+/* report */
+.report-card{border-radius:12px;border:1px solid #e7e5e4;background:#fff;padding:24px;margin-bottom:12px}
+.report-card h3{font-size:15px;font-weight:600;color:#1c1917;margin-bottom:8px}
+.report-card p{font-size:14px;color:#44403c;line-height:1.7}
+.rating{font-size:24px;font-weight:700;margin:8px 0}
+.rating-high{color:#059669}
+.rating-mid{color:#d97706}
+.rating-low{color:#dc2626}
+.pro-con{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+.pro,.con{padding:12px;border-radius:8px;font-size:13px;line-height:1.6}
+.pro{background:#f0fdf4;color:#065f46}
+.con{background:#fef2f2;color:#991b1b}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.tag{background:#f5f5f4;padding:4px 10px;border-radius:12px;font-size:12px;color:#78716c}
+/* paywall */
+.paywall{border-radius:16px;border:2px dashed #d6d3d1;background:#fafaf9;padding:32px 24px;text-align:center}
+.unlock-input{width:100%;max-width:200px;padding:10px 14px;border:2px solid #e7e5e4;border-radius:8px;font-size:16px;text-align:center;letter-spacing:3px;font-family:monospace;font-weight:600;outline:none}
+.unlock-input:focus{border-color:#1c1917}
+.unlock-msg{font-size:13px;margin-top:8px}
+.unlock-msg.error{color:#dc2626}
+.unlock-msg.success{color:#059669}
+.warn-box{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;margin:8px 0}
+.warn-box p{font-size:13px;color:#991b1b;line-height:1.6}
+</style>
+</head>
+<body>
+
+<header><h1>行业深度定制 · 日主×行业</h1></header>
+
+<main id="app">
+  <div id="step1">
+    <div class="card">
+      <h2 style="font-size:18px">输入生日，查出你的日主</h2>
+      <div class="input-grid">
+        <div><label class="block">年</label><input type="number" id="in-year" min="1900" max="2100" value="2000"></div>
+        <div><label class="block">月</label><input type="number" id="in-month" min="1" max="12" value="6"></div>
+        <div><label class="block">日</label><input type="number" id="in-day" min="1" max="31" value="15"></div>
+      </div>
+      <button class="btn" onclick="doBazi()">查看我的日主</button>
+      <p class="dim">输入公历生日，所有计算在浏览器本地完成</p>
+    </div>
+    <div id="bazi-result"></div>
+  </div>
+</main>
+
+<script>
+// ============================================================
+// 八字引擎
+// ============================================================
+const STEMS=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const BRANCHES=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+const STEM_ELEMENT={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+const ELE_BADGES={'金':'badge-gold','木':'badge-green','水':'badge-blue','火':'badge-red','土':'badge-amber'};
+
+function daysBetween(y1,m1,d1,y2,m2,d2){return Math.floor((Date.UTC(y2,m2-1,d2)-Date.UTC(y1,m1-1,d1))/86400000);}
+const SOLAR_TERMS={2:[4,4,4,5],3:[6,5,5,6],4:[5,4,4,5],5:[6,5,5,6],6:[6,5,5,6],7:[7,7,7,8],8:[8,7,7,8],9:[8,7,7,8],10:[8,8,8,9],11:[7,7,8,8],12:[7,7,7,8],1:[6,5,5,6]};
+function getTermDay(y,m){const arr=SOLAR_TERMS[m];return arr?arr[y%4]||arr[0]:6;}
+const YEAR_STEM_MONTH={0:2,5:2,1:4,6:4,2:6,7:6,3:8,8:8,4:0,9:0};
+const DAY_STEM_HOUR={0:0,5:0,1:2,6:2,2:4,7:4,3:6,8:6,4:8,9:8};
+
+function calculateBazi(year,month,day,hour){
+  const dayDiff=daysBetween(1900,1,1,year,month,day);
+  const dsi=((0+dayDiff)%10+10)%10;
+  const dbi=((10+dayDiff)%12+12)%12;
+  const lichun=getTermDay(year,2);
+  const isBeforeLichun=month<2||(month===2&&day<lichun);
+  const effYear=isBeforeLichun?year-1:year;
+  const ysi=(effYear-4)%10;
+  const ybi=(effYear-4)%12;
+  let mbi=month%12;
+  const termDay=getTermDay(year,month);
+  if(day<termDay)mbi=(mbi+11)%12;
+  const firstStem=YEAR_STEM_MONTH[ysi];
+  const msi=(firstStem+(mbi-2+12)%12)%10;
+  const hbi=Math.floor((hour+1)/2)%12;
+  const hsi=(DAY_STEM_HOUR[dsi]+hbi)%10;
+  return{
+    yearPillar:STEMS[ysi]+BRANCHES[ybi],
+    monthPillar:STEMS[msi]+BRANCHES[mbi],
+    dayPillar:STEMS[dsi]+BRANCHES[dbi],
+    hourPillar:STEMS[hsi]+BRANCHES[hbi],
+    dayMaster:STEMS[dsi],
+    dayElement:STEM_ELEMENT[STEMS[dsi]]
+  };
+}
+
+// ============================================================
+// 行业深度分析数据 (5行业 × 5日主)
+// ============================================================
+const INDUSTRY_DATA = {
+  '互联网': {
+    name:'互联网/科技', overview:'互联网不是一种五行——前端火、后端金、中台土。同一栋楼，脚下三套五行。不是这个行业合不合你——是你在这一层合不合。',
+    types: {
+      '金':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'金得金扶——后端、数据是你的主场',
+        pro:'后端、数据平台、算法架构。逻辑与系统天然同频，架构感在线。你的热情不长在嘴上，长在精度里。',
+        con:'前端、创意、销售。火克金——你的精密在那边不被看见。字距调到像素级，调完说不出为什么。',
+        roles:'后端开发 / 数据分析 / 算法工程 / 基础架构 / 技术管理',
+        shortTerm:'往深度走——不要横向换赛道。后端做深，数据做到别人实现不了的精度。你在互联网的唯一筹码，是你做出别人做不出的系统。',
+        longTerm:'从单点深度转向架构级影响力。数据平台负责人、技术VP、独立架构顾问——金日主在互联网的终点不是最会写代码的那个人，是制定系统的规则。',
+        harmonize:'金日主困在前端。不是废了——把组件库维护、前端架构、性能优化做到别人做不到的精度。你在靠近金的方向，不需要辞职。'
+      },
+      '木':{
+        rating:'mid', ratingText:'⭐⭐ 中等适配', ratingNote:'木得水生——互联网里有你的土壤，但不是所有岗位都适合',
+        pro:'产品创新、品牌内容、增长策略。木主生发——新项目从零到一，直觉告诉你这个东西能不能长。',
+        con:'纯后端、数据、合规运营。金克木——代码评审和系统逻辑不关心什么东西可以长。被流程反复修剪的不是工作量，是生长的意愿。',
+        roles:'产品经理(创新型) / 品牌营销 / 社区运营 / 用户增长 / 内部创新孵化',
+        shortTerm:'找互联网里有生长空间的岗位——产品创新、增长、品牌。避开纯执行和纯后端。你不是不会写代码——是代码不让你长。',
+        longTerm:'从单点产品走向创意主导角色——品牌总监、创新孵化负责人、创业者。木日主在互联网的终点不是CTO，是不能被归类的那个人。',
+        harmonize:'木日主被困在不太适合的岗位。在现有岗位种一棵你自己的树——内部创新提案、新人培训体系、开源项目。制度是围墙，围墙内也可以长树。'
+      },
+      '水':{
+        rating:'mid', ratingText:'⭐⭐ 中等适配', ratingNote:'水得金生——互联网的底层是你的深度，但表层的快节奏是干涸',
+        pro:'深度研究、算法研究、信息安全、数据架构。水主深度——一个领域扎十年，越扎越深。',
+        con:'中台运营、日常项目管理、高节奏业务岗。土克水——每日站会、每周OKR，水的天然节律被截流。',
+        roles:'算法研究员 / 安全工程师 / 数据架构师 / 技术写作 / 独立开发者',
+        shortTerm:'走技术深度路线——不要碰管理岗。你的价值不在管人，在一个所有人都放弃了的问题上你还在往下挖。',
+        longTerm:'成为领域专家——某个方向上的绝对权威。写书、做独立产品、走学术技术路线。不需要名片上的title，需要的是别人在这个问题上第一个想到你。',
+        harmonize:'水日主困在运营岗。把流程当河道而非围墙——找到流程中可以深挖的专业点。日报不是枷锁，是你梳理深度的工具。保持一个长期的个人研究项目，不是为跳槽——是为记住水的深度。'
+      },
+      '火':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'火得木生——前端、市场、内容，越燃越旺',
+        pro:'前端开发、用户体验、市场营销、内容运营。火主外放——像素级打磨、AB测转化、你的燃烧是最好的工作状态。',
+        con:'后端、数据清洗、基础设施维护。水克火——没有观众的火会自熄。优化上线三月才见效，三周就已经烧干了。',
+        roles:'前端工程师 / UX设计师 / 增长运营 / 内容营销 / 产品推广',
+        shortTerm:'往用户触达最密集的岗位走——前端、增长、市场。你需要被看见，不是虚荣——是燃料补给。做完没人知道的活不是懒，是没油了。',
+        longTerm:'从执行走向创造——设计负责人、品牌总监、独立创作者。火日主在互联网的最终形态不是码农或运营经理，是把自己的表达变成产品的那个人。',
+        harmonize:'火日主困在后端。拆分任务为能即时验证的小节点。每过一个节点就是一次燃料补给。同时用side project保持燃烧，不是为了赚钱——是不让火熄。'
+      },
+      '土':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'火土相成——产品、运营、管理，越压越稳',
+        pro:'产品管理、运营统筹、项目管理、团队管理。土主承载——左火右金，多方拉扯是你的日常节奏不是消耗。',
+        con:'创意发散型岗位、快速试错的创业项目。木克土——每日推翻昨天的规则，土在反复翻耕中散掉。',
+        roles:'产品经理 / 运营负责人 / 项目经理 / 部门管理 / HRBP',
+        shortTerm:'扛起协调者角色——产品经理或者运营总监方向。土生金——你所建立的每一个流程都是价值的源头。不是杂事，是骨架。',
+        longTerm:'走向高层管理——COO、VP of Operations、事业部负责人。把不同的人、不同的诉求捏在一起让事情发生——这是你最值钱的东西。',
+        harmonize:'土日主困在失控的初创或创意环境。自己建立制度——每天计划、每周复盘、每月目标。在混沌中造自己是那根定海神针，不是靠自由存活——是靠框架站稳。'
+      }
+    }
+  },
+  '金融': {
+    name:'金融', overview:'金融四张脸——卖方的嘴、买方的胆、交易的神经、银行的骨头。一人一套五行，站错了就是倒灌汽油。',
+    types: {
+      '金':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'金得金扶——投行、风控、模型，如刀入鞘',
+        pro:'投行建模、风险管理、量化分析、合规审计。金主精密与交易结构——不是在计算，是在打磨一件金器。',
+        con:'销售、客户关系、市场营销。火克金——高频社交不是补充是消耗，每一次pitch都在消耗燃料。',
+        roles:'量化研究员 / 风控经理 / 投行分析师 / 合规官 / 精算师',
+        shortTerm:'走技术金融路线——量化、风控、合规、精算。你的技能不是销售话术——是把风险拆到小数点后四位而且不觉得累。',
+        longTerm:'成为某个垂直金融领域的权威——衍生品定价、风险模型、监管科技。不是前台明星，是后台架构。',
+        harmonize:'金日主困在前台销售岗。往art direction/产品管理方向转。金主结构——设计管理系统、优化销售流程、搭建风控模型。不是所有金融人都在卖——有人在建。'
+      },
+      '木':{
+        rating:'mid', ratingText:'⭐⭐ 中等适配', ratingNote:'木得水生——VC、创新金融方向合适，传统银行和投行对你消耗大',
+        pro:'风险投资、私募股权、影响力投资、ESG金融。木主生发——翻BP到第三页不再往下翻，直觉告诉你这个人能不能长。',
+        con:'传统银行、合规风控、后台清算。金克木——流程即剪刀，一个创新想法磨三轮回到原点。',
+        roles:'VC分析师 / PE投资经理 / 影响力投资基金经理 / 金融创新产品 / FinTech创业者',
+        shortTerm:'进入投资侧——VC/PE/天使投资。不是做数据分析——是看人、看趋势、看什么东西能长。这是你的天赋。',
+        longTerm:'从分析师走向合伙人——有一个你自己的基金或投资品牌。木日主在金融的终点不是顶级的Analyst，是播种的人。',
+        harmonize:'木日主困在传统银行。在制度内找到可以生长的角落——内部创新项目、新业务孵化、数字化推进。围墙内也可以种树。周末用side project来补水——不只是副业，是呼吸。'
+      },
+      '水':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'水得金生——咨询、研究、交易方向天然契合',
+        pro:'经济研究、量化策略、投资分析、金融咨询。水主深度——一个领域沉十年，专业是你唯一不需要汇报的东西。',
+        con:'销售管理、日常运营、行政类岗位。土克水——每天的数据追踪和流程管控压至水汽全无。',
+        roles:'宏观策略师 / 量化交易员 / 行业研究员 / 风险策略 / 金融顾问',
+        shortTerm:'走研究分析路线——研究员、策略师、投资顾问。你的价值在比别人多往下挖了一层。不是看报表——是看懂报表背后的逻辑。',
+        longTerm:'成为某个市场或资产类别的权威——有自己的研究体系或交易哲学。写报告不如写书。在行业里是被引用的人，不是引用别人的人。',
+        harmonize:'水日主困在销售管理岗。在例行工作之外保持一个长期研究——一个你只为自己做的深度项目。不是为了跳槽，是为了记住水的深度。'
+      },
+      '火':{
+        rating:'mid', ratingText:'⭐⭐ 中等适配', ratingNote:'火得木生——销售、市场交易岗合适，后台岗慎入',
+        pro:'销售交易、财富管理、投资者关系、金融市场营销。火主外放——成交不是交易，是燃烧的即时回响。',
+        con:'后台清算、审计、合规、精算。水克火——孤军作战火会灭。一份报告写两周，中间不聊天。',
+        roles:'销售交易员 / 理财顾问 / IR投资者关系 / 金融品牌经理 / 财富管理',
+        shortTerm:'走前台路线——销售交易、理财顾问、投资者关系。你最有价值的时刻是在面对客户的那一刻，不是坐在屏幕后面。',
+        longTerm:'走向客户关系管理高层——私人银行负责人、机构销售总监。火日主在金融的终点是把人和钱连接起来，不是自己算账。',
+        harmonize:'火日主困在后台岗。在精密工作里埋反馈点——小步快跑，把大任务拆成能看到即时结果的小节点。同时用客户互动或培训作为燃料补给——跟同事或客户聊工作中的洞察，不是为了偷懒，是为了保持燃烧。'
+      },
+      '土':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'土金相生——银行、信贷、审批方向天然稳固',
+        pro:'银行信贷、审批管理、运营管理、风险框架、财富规划。土主年限与秩序——制度是你的骨骼不是牢笼。',
+        con:'高频交易、快速决策的trading floor、初创金融科技。木克土——方向天天变，没有流程的土会散。',
+        roles:'信贷审批 / 分行管理 / 运营总监 / 风险框架 / 私人银行家',
+        shortTerm:'走传统银行或大型资管路线——信贷、财富管理、运营管理。越稳越上。不是守旧——是你在制度化环境里自然发光。',
+        longTerm:'走向银行或金融机构高层——区域负责人、运营总裁、CRO。土日主在金融的终点是让系统运转——不一定是最聪明的人，但一定是最稳的那个人。',
+        harmonize:'土日主困在trading floor或初创FinTech。在混沌里建立属于你的结构。别人觉得你的流程太死板——但你的流程能救场。把你的系统化思维变成团队的资产。'
+      }
+    }
+  },
+  '体制内': {
+    name:'体制内/公务员', overview:'体制是土金互咬——土主规则与人，金主材料与流程。两层五行互相绞杀，你在中间被磨的不是体力，是五行。',
+    types: {
+      '金':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'金得土生——督查、纪检、材料岗，如刀入鞘',
+        pro:'纪检监察、审计督查、政策研究、法律事务。金主收敛与精确——材料即本能，标点符号都不能错。',
+        con:'基层行政、群众工作、窗口服务。火克金——高频率、低精度的社交不是你的节奏。',
+        roles:'纪检监察 / 审计 / 政策研究室 / 法规处 / 督查室',
+        shortTerm:'往精密度要求最高的岗位走——纪检、法规、督查、机要。你的沉默不是不善言辞——是你在看漏洞。',
+        longTerm:'成为某个监督领域的资深专家——纪检组长、审计处长、法律顾问。体制内少数不需要靠人际关系上升的通道——靠精准。',
+        harmonize:'金日主困在行政岗。把材料能力变成你的差异化标签——写方案、写报告、写分析。那些别人只求交差的东西，你磨到透。在体制里，写得好就是生产力。'
+      },
+      '木':{
+        rating:'low', ratingText:'⭐ 低适配', ratingNote:'金克木——体制的本质是收敛，木的本质是生发，结构性矛盾',
+        pro:'创新试点项目、宣传文化、教育培训、政策研究中的前瞻性课题。木主生发——在制度的夹缝里找到可以种的地方。',
+        con:'常规行政、日常运转、流程审批、档案管理。金克木——流程即剪刀。每日被修剪的不是工作量，是生长的意愿。',
+        roles:'宣传文化 / 党校教师 / 政策创新研究 / 群团工作 / 驻村扶贫',
+        shortTerm:'如果你已经在体制内：找创新空间——数字化改革、流程优化、党建创新。不要想着推翻规则——在规则里面找到一个允许你创造的小领域。',
+        longTerm:'木日主在体制内的出路：内部创业——体制内的创新项目、政企合作、智库。或者承认这里不适合你——在积累了经验后，向政策咨询、公益创业方向走。',
+        harmonize:'木日主困在日常行政。给自己一个长期项目——内部创新提案、改革建议、团队建设创新。有东西在长，你才不会被磨光。如果两年仍无生长空间——不是你的问题，是这个土壤不种树。'
+      },
+      '水':{
+        rating:'mid', ratingText:'⭐⭐ 中等适配', ratingNote:'水主深度——水利、规划、技术型编制合适，行政类需谨慎',
+        pro:'专业技术类编制——水利、规划、科研、技术管理。水主深度——十年画一张图，三十五年后还在用。',
+        con:'综合行政、日常运转、办公室文秘。土克水——每日流转、层层审批，不是深度工作，是被流程反复截断。',
+        roles:'水利工程 / 城市规划 / 科教研究 / 技术管理 / 政策研究',
+        shortTerm:'走专业技术路线——有编制的工程师、研究员、规划师。你是那个在别人觉得枯燥的工作里越做越深的人。',
+        longTerm:'成为领域技术权威——总工程师、学科带头人。水日主在体制里的终极形态不是行政级别，是专业上被需要的程度。',
+        harmonize:'水日主困在综合行政。把例行工作当成研究课题——优化流程、研究政策背后的逻辑。在看似重复的工作里挖到别人挖不到的深度。保持一个长期课题——只属于你的研究，不是为了升职，是为了不干涸。'
+      },
+      '火':{
+        rating:'low', ratingText:'⭐ 低适配', ratingNote:'火需被看见——体制内的缓慢反馈和层级审批在消耗你的燃料',
+        pro:'宣传文化、对外交流、群团活动、培训教育。火主外放——在讲台上、镜头前、活动现场，你有存在的必要。',
+        con:'基础行政、文书流转、机要保密、档案管理。水克火——无观众的火会自熄。做了没人知道，燃烧无处安放。',
+        roles:'团委 / 宣传部门 / 党校讲师 / 政务服务 / 外事接待',
+        shortTerm:'找体制内有舞台的岗位——党群宣传、团委、文化活动。不要坐办公室——你需要被看见，需要听众，需要反馈。选岗位先看这个岗位的人跟谁说最多的话。',
+        longTerm:'火日主在体制内最好的出路：走向培训/宣传/文化事业方向。或者承认体制不是你的最佳土壤——向文旅、文创、教育培训等半体制行业过渡。',
+        harmonize:'火日主困在文书行政。在重复工作中自己制造输出——写简报、做培训、拍短视频展示工作日常。把每一次材料当成表达的机会，不是负担。如果两年仍无展示空间——你的火需要换个灶台。'
+      },
+      '土':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'土得火生——行政、机关、管理，越稳越上',
+        pro:'行政管理、机关运转、人事管理、后勤保障。土主承载与年限——制度是你的骨骼不是牢笼，越稳越上。',
+        con:'创新试点、基层突击、应急处突需要快速反应的岗位。木克土——需要一个不被推翻的框架，这些岗位没有。',
+        roles:'办公室主任 / 机关管理 / 人事处长 / 后勤保障 / 行政协调',
+        shortTerm:'走行政综合管理路线——办公室、机关党委、人事教育。你的天赋不是单打独斗——是把一堆分散的人和事捏在一起，让整个机器转。',
+        longTerm:'走向中高层行政领导——处长、副局长、机关党委书记。土日主在体制的终点不是升到多高——是成为一个系统离不开的人。',
+        harmonize:'土日主困在天天翻船的试点岗。在变动中建立你能控制的微型制度——排程、归档、流程文档。不是不配合变革——是要让自己在变革中有一个站得住的位置。'
+      }
+    }
+  },
+  '创意行业': {
+    name:'创意/设计/自媒体', overview:'创意行业不是一种工作是两种。一种在公司——有工位、有周报、有甲方。另一种是自己干——只有deadline，没有制度。两种活法，五行截然不同。',
+    types: {
+      '金':{
+        rating:'mid', ratingText:'⭐⭐ 中等适配', ratingNote:'金主精密——公司创意岗的结构化管理是你的出路，独立创作慎入',
+        pro:'Art Direction、设计管理、创意技术、产品设计。金主结构——在发散的世界里你的框架感是稀缺资源。',
+        con:'纯发散创意、自由创作、自媒体。火克金——自由职业对金不是解放是失控。三周一个idea，两周推翻。',
+        roles:'设计总监 / 品牌策略 / 创意技术 / UX架构 / 设计系统管理',
+        shortTerm:'走创意管理方向——Art Director、设计系统负责人。你不是那个画图的——是那个搭框架的。别人用灵感做设计，你用逻辑做设计。',
+        longTerm:'走向创意领导——创意总监、品牌VP、独立创意顾问。金日主在创意行业的终点是那个「让创意有序发生」的人。',
+        harmonize:'金日主在做自由创作。给自己搭金的结构——固定作息、固定产出、固定收入流。每天同一个时间开始工作，每周同一个时间发布。自己给自己当甲方。能做到，就是极少数活得下来的金系自由人。'
+      },
+      '木':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'木得水生——创意行业的原生土壤，公司或独立都很顺',
+        pro:'概念创意、品牌策划、内容创作、艺术指导。木主生发——种自己的东西，越种越旺。不管是公司还是独立，都有你擅长的土壤。',
+        con:'纯执行型设计、格式化内容生产、重型客户管理。金克木——每一次被甲方改到第十七版不是在改稿，是在把你修剪到不长。',
+        roles:'创意总监 / 品牌策略师 / 内容创作者 / 自媒体人 / 独立设计师',
+        shortTerm:'如果独立：找到一个持续输出的频道——公众号、视频号、播客。木在独立创作中需要定期修剪——只种不收会耗尽养分。如果在公司：利用公司资源做自己的土壤——用企业品牌预算做你的创意探索。',
+        longTerm:'木日主在创意的终点是自己做出来一个东西——一个品牌、一个IP、一个工作室。不是别人的brief，是你的东西。',
+        harmonize:'木日主困在修图改字的基础执行里。找一个能让你从零到一的项目——一个没有brief的创意练习，一个你相信能长的个人作品。那是你真正的水源。'
+      },
+      '水':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'水生木——自由创作是水的本色，公司创意岗需有安全感',
+        pro:'独立创作、深度写作、纪录片、慢媒体。水主流动——自由是你的原生呼吸。你有最好的直觉去辨别真实的内容。',
+        con:'公司创意岗的甲方频繁修改和deadline文化。土克水——甲方的十七版修改不是在优化，是在一节一节阻塞你的河道。',
+        roles:'独立作家 / 纪录片制作人 / 深度记者 / 播客主持人 / 独立创作者',
+        shortTerm:'独立创作是最佳方向——找到自己可以持续输出的深度内容主题。同时建立一个稳定的客户或平台——水在独立创作中最需要的是持续引流的节点。一个长期客户、一个稳定平台、一个持续输出的频道。少一样就危险。',
+        longTerm:'成为某个深度领域的标志性创作者。不是流量最大——是辨识度最高。别人做不出来的内容你做出来了，因为你比他们都深。',
+        harmonize:'水日主困在公司创意岗。保护你的深度项目——公司工作给你稳定感，并用私人时间做你的深度创作。不是两条路——是一条河的两个分支，它们在入海口会合。'
+      },
+      '火':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'火得木生——创意行业的天然燃烧者，表达是你的燃料',
+        pro:'新媒体运营、短视频创作、直播、公共演讲。火主外放——表达不是技能是燃料补给。你在镜头前和舞台上不是消耗是充电。',
+        con:'幕后执行型创作、需要长期独自深耕的slow media。水克火——没有即时反馈的创作，火会自熄。',
+        roles:'视频创作者 / 社交媒体经理 / 播客主持人 / Event策划 / 品牌推广大使',
+        shortTerm:'走表达型创作——视频、播客、直播、公共演讲。选择能给即时反馈的媒介形式。你不是不能深——而是需要在燃烧中变深。',
+        longTerm:'成为某个领域的标志性表达者——不一定是最大的博主，但一定是最有辨识度的那个。火日主在创意的终点不是KPI，是被记住。',
+        harmonize:'火日主在做慢节奏创意。把大项目拆成可即时发布的片段——草图、过程、花絮。用小的燃烧维持大的创作。不是做完了再发——是边做边发，边发边燃。'
+      },
+      '土':{
+        rating:'mid', ratingText:'⭐⭐ 中等适配', ratingNote:'土得火生——创意行业里做统筹和结构可以，纯发散慎入',
+        pro:'创意项目管理、制作人、运营管理、创意团队统筹。土主承载——把一堆创意人的火花捏成一个可以交付的项目。',
+        con:'独立创作、自由职业、快速试错的实验性创意。木克土——没有流程的土会散，自由过头对你不是解放是失控。',
+        roles:'创意制片人 / 项目经理 / 运营主管 / 制作总监 / 设计Ops',
+        shortTerm:'走创意运营方向——制作人、项目经理、运营负责人。把创意人的想法落地成可执行的计划——这是你最值钱的地方。你不是那个想idea的人——是那个让idea成真的人。',
+        longTerm:'成为创意团队的幕后核心——制作总监、运营VP、工作室内务负责人。创意行业不缺想法，缺能让想法落地的土壤。你就是那片土壤。',
+        harmonize:'土日主在做独立创作。建制度、定节奏、做复盘——这些别人觉得窒息的事情恰恰让你站稳。土系独立人活得最不像外人眼中的自由职业——但活得最久。'
+      }
+    }
+  },
+  '教育/学术': {
+    name:'教育/学术', overview:'读博读到第三年说不出来哪里不对——就是越来越窄。教了五年书每天都在输出——自己越来越空。不是不适合这个行业，是不同类型的出厂设置在这个行业里被消耗的方式不一样。',
+    types: {
+      '金':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'土生金——教育政策、学术管理、课程设计方向合适',
+        pro:'教育政策研究、课程体系设计、教育技术、学术管理。金主条文与结构——课程大纲在你手里是架构不是表格。',
+        con:'需要共情输出的日常教学、频繁家长沟通、学生心理辅导。火克金——情绪劳动对你是消耗，不是输出。',
+        roles:'课程设计 / 教育政策 / 教研员 / 学术管理 / EdTech产品',
+        shortTerm:'走教育后端——课程研发、教育科技、政策研究。你不是站讲台的那个人——是让讲台上的人有东西可讲的那个人。',
+        longTerm:'成为教育系统架构者——课程标准的制定者、教育平台的搭建者。金日主在教育领域的终极形态不是名师——是让名师能运转的系统。',
+        harmonize:'金日主在教书。把教学变成系统工程——标准化教案、可复用教学模块、精确的评估标准。你不是在用情感教书——是在用精度教书。这种老师学生短期不感动，长期离不开。'
+      },
+      '木':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'木得水生——教书育人、教育创新方向的天然适配',
+        pro:'一线教学、教育创新、学生辅导、课程创意。木主生发——教书就是给种子浇水。学生在长，你也在长。',
+        con:'教育行政管理、标准化考核、纯学术论文灌水。金克木——行政流程和硬性指标在修剪，不是让树长大。',
+        roles:'骨干教师 / 教育创业者 / 创新课程导师 / 生涯规划师 / 特殊教育',
+        shortTerm:'走教学一线或教育创新——不要行政。讲台是你的菜园——你不是在传授知识点，是在种人。看到学生的改变是你最大的能量补给。',
+        longTerm:'成为教育实践派——教育创新者、教育家、独立教育品牌创始人。木日主在教育的终极形态不是高级职称——是在教育这件事上种出了新东西。',
+        harmonize:'木日主在做行政岗。发现学生——不是行政性地管理学生，是真正地带一个或几个学生过他们最难的阶段。这件事可以让你在行政岗位之外继续生长。'
+      },
+      '水':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'水主深度——学术研究天然归宿，教学岗需留输入通道',
+        pro:'学术研究、博士深造、学科深耕、学术写作。水主智——三十五岁画的图纸五十五岁还在用。一个领域扎进去越走越深。',
+        con:'高强度重复授课、教育培训机构的商业模式。土克水——每日课程表排满，输出远大于输入，水的深度被反复截断。',
+        roles:'高校研究员 / 硕博导师 / 学科带头人 / 课程深度设计 / 学术出版',
+        shortTerm:'走研究路线——读博、做博后、申请课题。你的天赋不是讲——是挖。每次深入研究一个课题，你都是在走正确的路。如果教学，控制课时，保持自己的研究时间。',
+        longTerm:'成为领域权威——在自己深耕的方向上建立独特视角。不追热点——热点最终会回到你的研究范围内，因为你的范围足够深。',
+        harmonize:'水日主在教学但没时间做研究。每年保持一个自己的研究主题——结合教学中的真实问题。不是为了发论文——是为了水不干涸。你是一个研究型教师，不是讲课型教师。'
+      },
+      '火':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'火得木生——教学一线和教育传播是你的天然舞台',
+        pro:'一线课堂教学、教育培训、教育传播、公共演讲。火主外放——讲台是你最好的充电路。台下学生的反应是你的燃料。',
+        con:'教育行政、课程研发幕后、纯学术研究。水克火——关在办公室里写方案，火自己灭。没有学生的日子对你不是安静，是缺氧。',
+        roles:'明星教师 / 教育主播 / 培训讲师 / 教育公益传播 / 辅导员',
+        shortTerm:'往学生最密集的地方走——一线教学、教育直播、培训讲师。你的时间花在学生身上是投资——不只是对他们，是对你自己的能量。',
+        longTerm:'成为教育传播者——万人课堂的讲师、教育自媒体、公众教育家。火日主在教育的终点不是教研员——是被学生记住的那个人。',
+        harmonize:'火日主困在行政岗。用好每一次出现在学生面前的机会——班会、讲座、公开课。把行政事务变成可以跟学生互动的场景。你就是教育界的演员——需要舞台，不是虚荣，是生存。'
+      },
+      '土':{
+        rating:'high', ratingText:'⭐⭐⭐ 高适配', ratingNote:'火土相成——教育管理和统筹岗，越压越稳',
+        pro:'教育行政管理、教务管理、学校运营、教育项目管理。土主承载与秩序——把一所学校或一个项目稳在轨道上。',
+        con:'需要快速创新、每天推翻昨天的教育实验项目。木克土——方向天天变，你的结构感无处安放。',
+        roles:'教务主任 / 校长助理 / 教育项目主管 / 学区管理 / 培训校长',
+        shortTerm:'走教育管理路线——教务、年级组长、学区管理。你不是最受学生欢迎的老师——但你是让所有老师能安心教书的那个人。',
+        longTerm:'走向教育系统高层——校长、学区负责人、教育机构运营总监。土日主在教育的终极形态不是著作等身——是一个区或一所学校，十年安稳运行。',
+        harmonize:'土日主在实验性教育项目。把你的流程感转化为团队的工具——不是要管住所有人，是把你的稳定性变成团队的稳定性。在自由里建立结构——你不只是适应变化，你让变化有迹可循。'
+      }
+    }
+  }
+};
+
+// ============================================================
+// App logic
+// ============================================================
+let currentBazi = null;
+let currentIndustry = null;
+
+function doBazi(){
+  const y=parseInt(document.getElementById('in-year').value);
+  const m=parseInt(document.getElementById('in-month').value);
+  const d=parseInt(document.getElementById('in-day').value);
+  const result=calculateBazi(y,m,d,12);
+  currentBazi=result;
+  const el=result.dayElement;
+  const badge=ELE_BADGES[el];
+  document.getElementById('bazi-result').innerHTML=`
+    <div class="result">
+      <div class="master-card">
+        <span class="badge ${badge}">日主</span>
+        <div class="master">${result.dayMaster} · ${el}</div>
+        <p class="desc">框架感先于感受。精密、秩序、不可见但不可或缺。</p>
+      </div>
+      <p style="text-align:center;font-size:14px;color:#44403c;margin-bottom:12px">选择你要深度分析的行业：</p>
+      <div class="industry-pick">
+        ${Object.entries(INDUSTRY_DATA).map(([k,v])=>`
+          <button class="ind-btn" onclick="pickIndustry('${k}')">${v.name}</button>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function pickIndustry(key){
+  currentIndustry=key;
+  if(isUnlocked()){
+    showReport();
+  } else {
+    showPaywall();
+  }
+}
+
+function showPaywall(){
+  const ind=INDUSTRY_DATA[currentIndustry];
+  const el=currentBazi.dayElement;
+  const typeData=ind.types[el];
+  const badge=ELE_BADGES[el];
+  document.getElementById('bazi-result').innerHTML=`
+    <div class="result">
+      <div class="master-card">
+        <span class="badge ${badge}">${currentBazi.dayMaster}日主 × ${ind.name}</span>
+        <p class="desc" style="margin-top:8px">${typeData.ratingNote}</p>
+      </div>
+      <div class="paywall">
+        <div style="font-size:48px;margin-bottom:12px">🔒</div>
+        <p style="font-size:16px;font-weight:700;color:#1c1917;margin-bottom:8px">${currentBazi.dayMaster}日主 × ${ind.name} · 深度定制版</p>
+        <p style="font-size:13px;color:#78716c;line-height:1.8;margin-bottom:16px">
+          完整解锁：行业五行总论 + 适配评级 + 具体表现（优势/风险）<br>
+          + 细化岗位 + 发展建议（短期/长期）+ 调和方案
+        </p>
+        ${PAYMENT_URL !== 'https://mbd.pub/go/YOUR_PRODUCT_ID' ? `<a class="btn" href="${PAYMENT_URL}" target="_blank" style="display:inline-block;text-decoration:none;margin-bottom:8px">解锁深度分析 ￥4.99</a>` : `<button class="btn" onclick="alert('请先配置支付链接')" style="margin-bottom:8px">解锁深度分析 ￥4.99</button>`}
+        <p class="dim" style="margin-top:12px">已有解锁码？</p>
+        <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;flex-wrap:wrap">
+          <input type="text" class="unlock-input" id="unlock-input" placeholder="输入解锁码" maxlength="10" autocomplete="off">
+          <button class="btn" onclick="handleUnlock()" style="width:auto;padding:10px 20px;font-size:14px">验证</button>
+        </div>
+        <p class="unlock-msg" id="unlock-msg"></p>
+        <span class="dim" style="display:block;margin-top:8px">付完款自动收到解锁码 · 回来输入即看 · 永久有效</span>
+      </div>
+    </div>
+  `;
+}
+
+function showReport(){
+  const ind=INDUSTRY_DATA[currentIndustry];
+  const el=currentBazi.dayElement;
+  const td=ind.types[el];
+  const badge=ELE_BADGES[el];
+
+  const isHigh=td.rating==='high';
+  const isLow=td.rating==='low';
+
+  document.getElementById('bazi-result').innerHTML=`
+    <div class="result">
+      <div class="master-card">
+        <span class="badge ${badge}">${currentBazi.dayMaster}日主 × ${ind.name}</span>
+        <p class="desc" style="margin-top:8px">${td.ratingNote}</p>
+      </div>
+      <div class="report-card">
+        <h3>行业五行总论</h3>
+        <p>${ind.overview}</p>
+      </div>
+      <div class="report-card">
+        <h3>适配评级</h3>
+        <div class="rating ${td.rating==='high'?'rating-high':td.rating==='low'?'rating-low':'rating-mid'}">${td.ratingText}</div>
+        <div class="pro-con">
+          <div class="pro"><strong>✅ 优势</strong><br>${td.pro}</div>
+          <div class="con"><strong>⚠️ 风险</strong><br>${td.con}</div>
+        </div>
+      </div>
+      <div class="report-card">
+        <h3>🎯 细化岗位</h3>
+        <div class="tag-row">${td.roles.split(' / ').map(r=>'<span class="tag">'+r+'</span>').join('')}</div>
+      </div>
+      <div class="report-card">
+        <h3>📋 短期发展建议</h3>
+        <p>${td.shortTerm}</p>
+      </div>
+      <div class="report-card">
+        <h3>🗺️ 长期职业路径</h3>
+        <p>${td.longTerm}</p>
+      </div>
+      <div class="report-card" style="background:#fafaf9">
+        <h3>🔄 如果你已经在这个行业</h3>
+        <p>${td.harmonize}</p>
+      </div>
+      ${isLow?`<div class="warn-box"><p>${currentBazi.dayMaster}日主在${ind.name}的五行逻辑上存在结构性冲突。不是不能说做不了——是每天在被消耗。考虑向更好的行业方向调整，或按上述调和方案在现有岗位上保护自己。</p></div>`:''}
+      <div style="text-align:center;margin-top:16px">
+        <button class="btn" onclick="resetAll()" style="max-width:200px">重新选择</button>
+      </div>
+    </div>
+  `;
+}
+
+function resetAll(){
+  currentBazi=null;currentIndustry=null;
+  document.getElementById('bazi-result').innerHTML='';
+}
+
+// ============================================================
+// 支付 & 解锁
+// ============================================================
+const PAYMENT_URL = 'https://mbd.pub/go/YOUR_PRODUCT_ID';
+const VALID_HASHES = ["8ea38e952de78a2aba00b895e7d1e6dfd1299f93a32719e5f85873dd073b7aa8","4e8da3d28625a7a5e87ba6a6231b6a7734da229815addb518386fdb70a642c8e","3088a36b69c489f3c34afecbf8c047bc59737886bfa539d6e95c8af1690b9ed7","8b0cd59c767c80bb0ca1ff82d440e32a783f9d0c68da7b82ea50ea0eaf47df7d","c248d4600b143f428c6eae0662479967171a39fc730bb74c885f0312cd7dc996","fe2ae9dada4c55f3a510a4f3fed68a230f9eed996b8ec7739043c42bdc9d8ed1","dd036f825388b6f0f432d92b2189e459d50cfb895890d198503a7ab5d2988a3a","23875fc5d2b80cd1325235f67fa9c266b1b0c9333b10e5d840ae83c29dfaadd0","3fc2b6effd67a3c35fb2d6c087984b282aad89af6cb34ad88150b383621813ee","b83a72a8503e4c3f1b0c40f1adb272e5d134146c9204824da47095977c592ea6","4aae2c2a5b3a55e3d0e84807319bb34c6d87ca5abb798007d871b02da6ccda6c","78c89630fbd1ba06ba1f8da16c8a03b993b88b2de06c7fbc46f710754212addd","3d9505438a7aafe13c7cf3a64d1509a46b6dc3114ba18ec0ebe162a992eff776","0b633269ab27c7f703b6bfe621a2c62f27b4a0503b068eb2f522d0712da04541","702e1965df7babd3f5d904125398706f306ec16dcb1d1b14af637cb2d8dda414","765dbf025844976d32e5a182d49bc2b9ba445aa0f72710d1015be6826b293ab5","b8199d180d6def7dd7c9b82d57b868cd332179a7dd09eeccea97845cb73fb3e8","42b6a3a6bd7f56173b8800d86733a82183e509be7090561a91bec80eae707b2b","159b5981e07a3b13226b2cdbbe5ae4cd16a20224173eb765ff367c9b6feac4cd","fe9f642c3975c14c6df65c57813e9b27807921e63695c7564934fc82302502b2","b9ce3d7d1fb1e1d7a1b3cc8c05b9c98570e7ac0f5c7655cf05ffed75e533b268","3f40c3b4057c69e35d5312bf5c54e51179ccad30f1e5ebe59b7965e47e41a0c7","6b0a23bed8015fc8d6788bcfa893ced324d0c83b09337e1ba98cd186218cfd47","9a4c7b03c883a70ab46d3816980d7be0fd91bb859eb1489c384db277f5537f19","649845e7002299a51bad1b6357b2767fae530d4cf67fad9f983bceb36cf8ca57","adf6e879aa9077bc9c7b8d3958b3ec09a0a9de15299b0aa28cfee26f771218b8","f291127af1b89c351121b7b46f74c021fca3c089b1b5a6b7a9edcf045deafb12","326194bc9c9ae758e1c0dcac5df4a2d1714ba6f136b7e3a0734c11bb07ce2a08","2fd0bd283d0df4121aa1d476f165091e5daf39003648989fb20da84f3d0e457f","1afa44fb5eee543679194078f3ebe06114409f40eb05a57e5e1df997c02a6852","e02add3eb8357fdb4f5d456a31eeee9ef054d303e7da80ad569e88745eb6e59d","5b2cf018c4f2bfae59f2580cb4c388bfad92d58db665d8624827b35156db6b9e","305004b5efd432b3c065888cb40b8df19c5ceb7e817deb103e2609184609aba5","33c441f169267846a3e8820689541195d2472a85ff6f6d95834392bce57f6ae9","3b31603ed52f97e8433afb2ea2084dd275d3f66e952cdcb0febc1b62ade8600b","aa7def01235eb898d3ab7e005e1b22c464f8cb2d9ffcfad498c1a6bf41645b21","43a6b1f7084fe6aaea6967e61b1af39ac7de55752bfae282edcd796f0ac6e960","4bf9aa2e488556195b1b388c0f538fa69a7ad0f5c59a1c0a4a1d3ed33216b5d0","76c755db472bdcfdb808f34ec83c5bdc41d2e2528d868e38ca65259acd40ef76","fd7666a8af4447ca51d9bc0c839f9efcd521ec5211d645e9f2cf968ef1afa6e1","c7943c2984f1a4cfea8c11a53177542222d245c95d2db9e2d8d5268524299f64","9b53ff6b9511a8d260cb3f170fcc9143d82bb513d6baf05f0d365d1e498efd45","be65771192de050d69e7900c9bcaf35902cf9312645fa2604d890f136a49ea47","ce28d03375a580a8f7b35c007a9b5f09e776b6167b4f526cd36ca7e2f4eb8d2b","a1d69dfb2cb1378df80bef5190034afa69ebda44189a736612f5ca75697a6db5","83869b693de9165917bca9fc2af99fb4f16b04bfd82175152e57cda66f64377d","51940fc458c2db1ba59856e56767bf1e38c94f419d10cdcc56f2a3b415b4e98b","c8426abae5c69637b24f5b208d5423642f1bb1858e213dfb52aeb888b2d629b6","f3f5ec4d13de07a1a13f936a500e657c75ff4cb0ea88f4f08a885a96943bb2dd","7b43537d3bd27c116e420e01ad73ace4c07f78e1e94a1e3d05c8669751e47d6a","c31c42338aec11b74e4291e3757f661654154bcd1ef881308ac3958dd6f4484b","8307a175edd41c5387c7f875315bf2f9839caaa32d65b5939d7d3eb9f868eb7f","3e8400cde049cd0d6ba0440c2f25a2dbd23b9b10dd2cc35963f19b3c59f1e19b","f6eff1a5099012bbd7bd4a2ffc9a7e1026c6b0672b683f489a2257749e994cdd","786e2a3816ded1e12322e83aff0b72309edb8d695b09331b301ee425d16fbc2c","c06e6514d7d6e83551e231a790b0b62279a191ec20f221367e652e40d4eea124","c8d7bd380f6f9c5c40db42358e5cf5844d241d0a5a143e14413b84a516349d6d","210b73df18069bb13a11de0994f7da593a4e6bc4977291e48775e7b6a6a6c430","3405c10cb7c5be24d716a2d0c67079a300c09baa721518409d16cf6776591d8f","40d52a0f5ab821270db826ba4759247d08c4cbf7d84e212dbedff5324699c5a7","375de94eb031342b239ba7ee0afd7e33c8c4e3b8a28be36bb5568f8811ccdd5b","40b4d58174e06793c05746cb7a10f3f05001bc7d963f37f87882bf00e9d4b748","c28ee13f1b52c5397cccf617ccfef66669f01555878d1298925b41a510ca81f8","078c1195ddeea6a1b2c38597eeb3b10daca65ba7e974918c8cf95ef68c3bcd78","03979daa576aab29bd5e334548e81bf9b844f65f859099e09557f8a450d67169","fff30f29edad58a3716145dc7aee5c468bf4254a1f830b57cf2fb7bbc9cc81d6","76df473244dcba35cdf6386f7d46b364350352ba0834a330d1c1b1ac7edb0061","12db6b58b193347b9dc2a0e8a5f28f432f02ae435153630448eedac37677c7e2","9938c6df237167cad10d1bcfbc6f5e4c8503216518a0627c7abcb7ec312af905","93eba623fb4cd5d6edf92e501d7136b3d4c0b87a221579b5c39ae35feedf5f8c","e449f1848e6495146c7bea3166157025fa07a2cad16fa5c179c0a3cbc82b0573","cf32640b5eb93323c4dcf0f2e6db94a4c7b76ca5a3d9e88ecaec53570b8853ea","7900ad6167a1c2ef112eef85b1e2320f5cad2facf1e15858ae7c776f4b6362f5","5c275535b41edc2e5125b6053df73c4040856e8bb5d7c71982c61ca88fd35083","b0fb6f2795859fdfaabbcc3d96c55198fae27aabdbeadcfc3b531ee9146f3f79","03a3cc21d6755813762a08f67d7d133d9d7e834ca23f06a5f29e19fcd8151b24","d140beac4e66be076cb4d42514f72584f3aa2bf453b774217a62d4a0f7e26a32","e8ada4ddf66cc02527f514588e37532fbcb3b043006786adc7dff542cbec6c5c","07b4e36af621bb3104a0116b46c39de4b15b5af2a9d1ad0e99f7cdda3815dadd","6fa18da23575791bd94245378df9069963c0d43d92ae5f369dcdb2b4c8d6967b","1e7e327beb49810456650496e2a884638e90aea1a4f7b49bf77a4fb6f1f3cb15","1a341168eb57fa2aafcffcf9b622624335b582680ece85392d2ea08b1f12b423","f965baeb9f9039e6c137766cc0df73dac08cda1cf5664288a44ac7ca96dbe0f0","7670c7191048d6b736309b6daffd346c02b69bf0a1065f7cbdceb2f10e9507ac","5dffa03fa230e794e79065977c27774f2c58485370860209eacdc750cd04fc6e","57e6de7a5c7dbe2c1aad8204ca7c3788aacf5e0eabd1afc537f08a8d5b301218","14cd1ec6e634164fec48b6bcd2fb8f6a5da3e009a7baf2c3e109f32e5bba5e10","9f5d70cc3e898e584308e805eab20d2e25b890c66525fedf5ea667740a869cac","5841efe7464abbd3f559245c73180b409f3511f3f7b4619b8b4a1f10a2864d4c","cdee823ffe2a5cc3b6527bf933f2aff4156bd4da7cb4f637b9813f32e0e8cb6a","b5c55b5f5fa8fdea18910e0301b9366135bb05e0907ab33de4a5c62f152adf57","7ecc0ee96c44b71348ec2c68035e7b0c5ab6f7092108266e6ac69a9bd39427a8","af04d3c15caf2ad89f7e01a797b94541c2a8ac9cd9ccb24215805d2ffb363518","30548981ddaf1f195f90cba1678c71fd0414ffe07d2fe42f8feea6927e17670d","5b15de1e7cb595ed183c8d81415fc28d607b6cbd0fb812c52240decda4bf9fe4","9eb379bd677e51f7296d74ff7847ae17586c6cd519150c340500cd05038d9d4c","79e056930006e407d658ebf6bc438cbb345b12cdf17324fe56f734e99327e1e5","d68fb02e5df18b9edee59af42542d3cc6410aa62d3986a03e5dec6672be78b38","6e583580c4df5de0ade10929803754d15ff0213e09295b338740a74f96a437f7","f6a5093e5611676a7fd13d4ec1c682d1ab30cb62971ce0166fcda730ce70af66"];
+
+async function verifyCode(code){const e=new TextEncoder();const d=e.encode(code.trim().toUpperCase());const h=await crypto.subtle.digest('SHA-256',d);const a=Array.from(new Uint8Array(h));return VALID_HASHES.includes(a.map(b=>b.toString(16).padStart(2,'0')).join(''));}
+function isUnlocked(){return localStorage.getItem('ind_unlocked')==='true';}
+function setUnlocked(){localStorage.setItem('ind_unlocked','true');}
+async function handleUnlock(){
+  const input=document.getElementById('unlock-input');
+  const msg=document.getElementById('unlock-msg');
+  if(!input)return;
+  const code=input.value.trim();
+  if(!code||code.length<6){msg.textContent='请输入完整的解锁码';msg.className='unlock-msg error';return;}
+  msg.textContent='验证中...';msg.className='unlock-msg';
+  const valid=await verifyCode(code);
+  if(valid){setUnlocked();showReport();}
+  else{msg.textContent='解锁码无效，请检查后重试';msg.className='unlock-msg error';}
+}
+</script>
+</body>
+</html>
