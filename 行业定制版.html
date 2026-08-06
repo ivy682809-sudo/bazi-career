@@ -135,31 +135,32 @@ function calculateBazi(year,month,day,hour){
 // 身强身弱 + 喜用神分析
 // ============================================================
 
-function getStrength(dayElement, monthBranch, dayBranch, hourBranch, gender, year) {
-  // 核心：月支是否同五行（得令）+ 日支是否同五行（通根）+ 是否有生扶
+function getStrength(dayElement, monthBranch, dayBranch, hourBranch, gender, year, yearBranch) {
+  // 月支同五行（得令）+ 日支同五行（通根）+ 时支同五行 + 年支同五行 + 月支生我
   const SEASON = {木:['寅','卯','辰'],火:['巳','午','未'],金:['申','酉','戌'],水:['亥','子','丑'],土:['辰','未','戌','丑']};
-  const STEM_TO_ELE={甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
   const BRANCH_TO_ELE={寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水',子:'水',丑:'土'};
 
   const isMonthSameEle = SEASON[dayElement]?.includes(monthBranch)||false;
   const isDaySameEle = BRANCH_TO_ELE[dayBranch]===dayElement;
   const isHourSameEle = BRANCH_TO_ELE[hourBranch]===dayElement;
+  const isYearSameEle = BRANCH_TO_ELE[yearBranch]===dayElement;
 
-  // Gender influences: 男属阳为顺，女属阴为顺；年干阴阳决定大运顺逆
-  const yearStemIdx = (year-4)%10;
-  const isYangYear = yearStemIdx%2===0; // 甲丙戊庚壬为阳年
+  // 月支生我：如木日主在亥月子月（水生木）
+  const g={木:'火',火:'土',土:'金',金:'水',水:'木'};
+  const b={木:'水',火:'木',土:'火',金:'土',水:'金'};
+  const r={木:'土',火:'金',土:'水',金:'木',水:'火'};
+  const rb={木:'金',火:'水',土:'木',金:'火',水:'土'};
+  const monthBranchEle = BRANCH_TO_ELE[monthBranch]||'';
+  const isMonthGeneratesMe = b[dayElement]===monthBranchEle; // 月支生我
+
   let score = 0;
   if(isMonthSameEle) score+=3;
   if(isDaySameEle) score+=2;
   if(isHourSameEle) score+=1;
+  if(isYearSameEle) score+=1;
+  if(isMonthGeneratesMe && !isMonthSameEle) score+=1; // 月支生我（不与得令重叠）
 
   const strength = score>=3 ? '身强' : '身弱';
-
-  // 五行生克链
-  const g={木:'火',火:'土',土:'金',金:'水',水:'木'}; // 我生
-  const b={木:'水',火:'木',土:'火',金:'土',水:'金'}; // 生我
-  const r={木:'土',火:'金',土:'水',金:'木',水:'火'}; // 我克
-  const rb={木:'金',火:'水',土:'木',金:'火',水:'土'}; // 克我
 
   let fav,unfav,favEles,unfavEles,tip;
 
@@ -177,7 +178,14 @@ function getStrength(dayElement, monthBranch, dayBranch, hourBranch, gender, yea
     tip='能量需要外部支持，喜稳定滋养的工作环境。适合深耕型角色、需要持续输入积累的场景。忌孤军作战或被迫做自己不擅长的事——没有子弹的枪打不出多远。';
   }
 
-  return {strength,score,isMonthSameEle,isDaySameEle,isHourSameEle,fav,unfav,favEles,unfavEles,tip};
+  const detailParts=[];
+  if(isMonthSameEle) detailParts.push('月支得令');
+  if(isDaySameEle) detailParts.push('日支通根');
+  if(isHourSameEle) detailParts.push('时支有根');
+  if(isYearSameEle) detailParts.push('年支有根');
+  if(isMonthGeneratesMe && !isMonthSameEle) detailParts.push('月支生扶');
+
+  return {strength,score,isMonthSameEle,isDaySameEle,isHourSameEle,isYearSameEle,isMonthGeneratesMe,fav,unfav,favEles,unfavEles,tip,detailText:detailParts.join(' + ')};
 }
 
 function getFavorable(dayElement, strResult) {
@@ -768,7 +776,7 @@ function showPaywall(){
         <div style="font-size:48px;margin-bottom:12px">🔒</div>
         <p style="font-size:16px;font-weight:700;color:#1c1917;margin-bottom:8px">${currentBazi.dayMaster}日主 × ${ind.name} · 深度定制版</p>
         <p style="font-size:13px;color:#78716c;line-height:1.8;margin-bottom:16px">
-          完整解锁：身强身弱判定 + 喜用神分析 + 公司规模匹配<br>
+          完整解锁：身强身弱判定（五维评分）+ 喜用神分析 + 公司规模匹配<br>
           + 能量周期 + 转行路线 + 行业五行总论<br>
           + 适配评级 + 具体表现 + 细化岗位 + 发展建议 + 调和方案
         </p>
@@ -794,21 +802,17 @@ function showReport(){
   const isHigh=td.rating==='high';
   const isLow=td.rating==='low';
 
-  // 身强身弱（新版：月支+日支+时支综合判断）
+  // 身强身弱（月支+日支+时支+年支+月支生克 综合判断）
   const monthBranch = currentBazi.monthPillar.charAt(1);
   const dayBranch = currentBazi.dayPillar.charAt(1);
   const hourBranch = currentBazi.hourPillar.charAt(1);
+  const yearBranch = currentBazi.yearPillar.charAt(1);
   const yearInput = parseInt(document.getElementById('in-year').value);
-  const strResult = getStrength(el, monthBranch, dayBranch, hourBranch, currentGender, yearInput);
+  const strResult = getStrength(el, monthBranch, dayBranch, hourBranch, currentGender, yearInput, yearBranch);
   const strength = strResult.strength;
   const favorable = getFavorable(el, strResult);
   const strengthStyle = strength === '身强' ? 'color:#059669' : 'color:#6366f1';
-
-  const detailParts = [];
-  if(strResult.isMonthSameEle) detailParts.push('月支得令');
-  if(strResult.isDaySameEle) detailParts.push('日支通根');
-  if(strResult.isHourSameEle) detailParts.push('时支有根');
-  const detailText = detailParts.length > 0 ? detailParts.join(' + ') : '未得令/通根/有根';
+  const detailText = strResult.detailText || '未得令/通根/有根';
 
   document.getElementById('bazi-result').innerHTML=`
     <div class="result">
@@ -823,7 +827,10 @@ function showReport(){
         <p style="font-size:14px;color:#44403c;line-height:1.7;margin-bottom:8px">
           <span style="font-weight:700;${strengthStyle}">${strength}</span> · ${detailText}
         </p>
-        <p style="font-size:12px;color:#a8a29e;margin-top:4px;margin-bottom:10px">月支${monthBranch} ${strResult.isMonthSameEle?'✓同五行':''} · 日支${dayBranch} ${strResult.isDaySameEle?'✓通根':''} · 时支${hourBranch} ${strResult.isHourSameEle?'✓有根':''}</p>
+        <p style="font-size:12px;color:#a8a29e;margin-top:4px;margin-bottom:10px">
+          月支${monthBranch}${strResult.isMonthSameEle?' ✓同五行':strResult.isMonthGeneratesMe?' ✓生我':''} · 日支${dayBranch}${strResult.isDaySameEle?' ✓通根':''} · 时支${hourBranch}${strResult.isHourSameEle?' ✓有根':''} · 年支${yearBranch}${strResult.isYearSameEle?' ✓有根':''}
+          <br>总分 <strong style="${strengthStyle}">${strResult.score}分</strong>（≥3为身强）
+        </p>
         <p style="font-size:13px;color:#78716c;line-height:1.6">${favorable.tip}</p>
       </div>
 
